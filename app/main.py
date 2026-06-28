@@ -19,7 +19,7 @@ while True:
     user_input = input("You: ")
 
     if user_input.lower() == "exit":
-        print("\nRoha: Goodbye, Roshan!")
+        print("\nRoha: Goodbye, Sir!")
         break
 
     # Save user's message
@@ -32,7 +32,7 @@ while True:
 
     # Send entire conversation to Ollama
     response = chat(
-        model="gemma3:4b",   
+        model="phi4-mini:3.8b",   
         messages=messages
     )
 
