@@ -1,34 +1,50 @@
 from ollama import chat
 
-# Read Roha's personality
+# Roha's personality
 with open("prompts/system_prompt.txt", "r", encoding="utf-8") as file:
     system_prompt = file.read()
 
-# Initialize Roha
+# Conversation history
+messages = [
+    {
+        "role": "system",
+        "content": system_prompt
+    }
+]
+
 print("Roha is online!")
-print("Type 'exit' to quit.\n")
+print("Type 'exit' to quit.")
 
 while True:
     user_input = input("You: ")
 
     if user_input.lower() == "exit":
-        print("Roha: Goodbye!")
+        print("\nRoha: Goodbye, Roshan!")
         break
 
-    response = chat(
-        model="gemma3:4b",
-        messages=[
-            {
-                "role": "system",
-                "content": system_prompt,
-            },
-            {
-                "role": "user",
-                "content": user_input,
-            }
-        ],
+    # Save user's message
+    messages.append(
+        {
+            "role": "user",
+            "content": user_input
+        }
     )
 
-    print("Roha:", response["message"]["content"])
+    # Send entire conversation to Ollama
+    response = chat(
+        model="gemma3:4b",   
+        messages=messages
+    )
 
-print("Roha is offline.")
+    assistant_reply = response["message"]["content"]
+
+    # Save Roha's reply
+    messages.append(
+        {
+            "role": "assistant",
+            "content": assistant_reply
+        }
+    )
+
+    print("\nRoha:", assistant_reply)
+    print()
