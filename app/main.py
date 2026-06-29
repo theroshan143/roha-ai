@@ -32,7 +32,7 @@ while True:
 
     # Send entire conversation to Ollama
     response = chat(
-        model="phi4-mini:3.8b",   
+        model="qwen3:8b",   
         messages=messages
     )
 
