@@ -1,8 +1,9 @@
-from ollama import chat
+from app.prompts import load_system_prompt
+from app.config import MODEL
+from app.chat import chat_with_roha
 
 # Roha's personality
-with open("prompts/system_prompt.txt", "r", encoding="utf-8") as file:
-    system_prompt = file.read()
+system_prompt = load_system_prompt()
 
 # Conversation history
 messages = [
@@ -31,13 +32,7 @@ while True:
     )
 
     # Send entire conversation to Ollama
-    response = chat(
-        model="qwen3:8b",   
-        messages=messages
-    )
-
-    assistant_reply = response["message"]["content"]
-
+    assistant_reply = chat_with_roha(messages)
     # Save Roha's reply
     messages.append(
         {
