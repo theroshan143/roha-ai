@@ -1,1 +1,1 @@
-MODEL = "qwen3:8b"
+MODEL = "qwen2.5:3b-instruct"
