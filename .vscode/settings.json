@@ -3,4 +3,6 @@
   "python.analysis.extraPaths": [
     ".venv/Lib/site-packages"
   ]
+  ,
+  "python.terminal.useEnvFile": true
 }
