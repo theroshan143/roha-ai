@@ -1,5 +1,7 @@
 ollama
 colorama
 python-dotenv
+# Text-to-speech
+pyttsx3
 # Optional/for future features:
 # whisper (speech-to-text), piper (tts), chromadb

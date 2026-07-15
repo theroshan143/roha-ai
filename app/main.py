@@ -72,6 +72,16 @@ def main():
             print("\nRoha:", assistant_reply)
             print()
 
+            # speak if TTS is enabled
+            try:
+                from app.tts import create_default_tts
+
+                tts = create_default_tts()
+                if tts:
+                    tts.speak(assistant_reply)
+            except Exception:
+                logging.debug("TTS unavailable or failed to speak")
+
     except KeyboardInterrupt:
         print("\nExiting...")
     finally:
