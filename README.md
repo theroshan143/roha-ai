@@ -1,5 +1,7 @@
 # Roha
 
+Maintained by Roshan Kumar. AI tools may assist development, but the project is human-led.
+
 Roha is a personal AI assistant built from scratch in Python.
 
 ## Vision
@@ -40,3 +42,7 @@ Current Milestone:
 ## Author
 
 Roshan Kumar
+
+## Maintenance Note
+
+This project is maintained by Roshan Kumar. AI tools may be used to help with development and writing, but the project direction, ownership, and final decisions are human-led.
