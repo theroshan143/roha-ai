@@ -13,24 +13,13 @@ class TTSManager:
         self.engine = None
         self._queue = queue.Queue()
         self._worker = None
-        try:
-            import pyttsx3
-        except Exception:
-            logging.warning("pyttsx3 not installed; TTS disabled")
-            self.enabled = False
-            return
-
-        try:
-            self.engine = pyttsx3.init()
-            self.set_voice(voice_gender)
-        except Exception as e:
-            logging.warning("Failed to initialize TTS engine: %s", e)
-            self.enabled = False
-            return
-
-        # start background worker
-        self._worker = threading.Thread(target=self._worker_loop, daemon=True)
+        self._ready = threading.Event()
+        # start background worker which will create the engine on the worker thread
+        self._worker = threading.Thread(target=self._worker_loop, args=(voice_gender,), daemon=True)
         self._worker.start()
+        # wait briefly for the engine to be ready; do not block indefinitely
+        if not self._ready.wait(timeout=5):
+            logging.warning("TTS engine did not initialize within timeout; TTS may be unavailable")
 
     def set_voice(self, gender: str):
         if not self.engine:
@@ -55,8 +44,32 @@ class TTSManager:
         except Exception:
             logging.debug("Could not enumerate voices; using default")
 
-    def _worker_loop(self):
+    def _worker_loop(self, voice_gender: str):
+        # Initialize pyttsx3 on this thread to respect COM STA requirements on Windows
+        try:
+            import pyttsx3
+        except Exception:
+            logging.warning("pyttsx3 not installed; TTS disabled")
+            self.enabled = False
+            self._ready.set()
+            return
+
+        try:
+            self.engine = pyttsx3.init()
+            try:
+                self.set_voice(voice_gender)
+            except Exception:
+                logging.debug("Failed to set TTS voice on worker thread")
+            logging.info("TTS engine ready on worker thread")
+            self._ready.set()
+        except Exception as e:
+            logging.warning("Failed to initialize TTS engine on worker thread: %s", e)
+            self.enabled = False
+            self._ready.set()
+            return
+
         while True:
+            text = None
             try:
                 text = self._queue.get()
                 if text is None:
@@ -71,7 +84,10 @@ class TTSManager:
                 except Exception as e:
                     logging.warning("TTS speak failed during worker: %s", e)
             finally:
-                self._queue.task_done()
+                try:
+                    self._queue.task_done()
+                except Exception:
+                    pass
 
     def speak(self, text: str) -> None:
         if not self.enabled or not self.engine:

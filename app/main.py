@@ -97,6 +97,12 @@ def main():
         print("\nExiting...")
     finally:
         memory_manager.close()
+        try:
+            if 'tts' in locals() and tts:
+                tts.shutdown()
+                logging.info("TTS shut down")
+        except Exception:
+            logging.debug("Error shutting down TTS")
 
 
 if __name__ == "__main__":
