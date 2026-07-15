@@ -1,12 +1,9 @@
 import logging
 import os
-from dotenv import load_dotenv
 from app.prompts import load_system_prompt
 from app.chat import chat_with_roha
 from app.memory import MemoryManager
 
-# Ensure environment variables from .env are loaded
-load_dotenv()
 
 # Ensure necessary directories exist
 os.makedirs("logs", exist_ok=True)
