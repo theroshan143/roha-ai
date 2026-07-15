@@ -1,7 +1,9 @@
 from app.config import MODEL
+from typing import Sequence
+from app.types import Message
 
 
-def chat_with_roha(messages):
+def chat_with_roha(messages: Sequence[Message]) -> str:
     try:
         # import the Ollama client lazily so the module can be imported in test environments
         from ollama import chat

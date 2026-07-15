@@ -1,5 +1,6 @@
 {
   "python.defaultInterpreterPath": ".venv\\Scripts\\python.exe",
+  "python.analysis.typeCheckingMode": "default",
   "python.analysis.extraPaths": [
     ".venv/Lib/site-packages"
   ]

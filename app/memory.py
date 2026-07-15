@@ -1,6 +1,7 @@
 import sqlite3
 import atexit
-from typing import List, Optional
+from typing import List, Optional, Tuple, Any
+from types import TracebackType
 
 
 class MemoryManager:
@@ -46,12 +47,13 @@ class MemoryManager:
             self.cursor.execute(
                 "SELECT content FROM messages ORDER BY timestamp DESC LIMIT ?", (limit,)
             )
-            rows = self.cursor.fetchall()
+            rows: List[Tuple[Any, ...]] = self.cursor.fetchall()
             # return oldest->newest order
             return [r[0] for r in reversed(rows)]
 
         self.cursor.execute("SELECT content FROM messages ORDER BY timestamp ASC")
-        return [row[0] for row in self.cursor.fetchall()]
+        rows2: List[Tuple[Any, ...]] = self.cursor.fetchall()
+        return [row[0] for row in rows2]
 
     def summarize_memory(self, keep_last: int = 50) -> None:
         """Collapse older messages into a single summary entry.
@@ -73,7 +75,7 @@ class MemoryManager:
                 "SELECT id, role, content FROM messages ORDER BY timestamp ASC LIMIT ?",
                 (to_summarize,),
             )
-            rows = self.cursor.fetchall()
+            rows: List[Tuple[Any, ...]] = self.cursor.fetchall()
             if not rows:
                 return
 
@@ -82,7 +84,7 @@ class MemoryManager:
             summary_text = f"[Summarized {len(rows)} messages]\n" + (combined[:2000] + "..." if len(combined) > 2000 else combined)
 
             # delete summarized rows
-            ids = [str(r[0]) for r in rows]
+            ids: List[str] = [str(r[0]) for r in rows]
             q = f"DELETE FROM messages WHERE id IN ({', '.join(ids)})"
             self.cursor.execute(q)
 
@@ -105,8 +107,18 @@ class MemoryManager:
             pass
 
     # context manager support
-    def __enter__(self):
+    def __enter__(self) -> "MemoryManager":
         return self
 
-    def __exit__(self, exc_type, exc, tb):
+    def __exit__(
+        self,
+        exc_type: Optional[type],
+        exc_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> Optional[bool]:
+        """Context manager exit; close DB connection.
+
+        Returns None (do not suppress exceptions).
+        """
         self.close()
+        return None

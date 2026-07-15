@@ -1,5 +1,8 @@
 import logging
 import os
+from typing import List
+
+from app.types import Message
 from app.prompts import load_system_prompt
 from app.chat import chat_with_roha
 from app.memory import MemoryManager
@@ -20,13 +23,13 @@ logging.basicConfig(
 )
 
 
-def trimmed_messages(messages, history_limit=12):
+def trimmed_messages(messages: List[Message], history_limit: int = 12) -> List[Message]:
     """Return a trimmed copy of messages keeping the system prompt and last N messages."""
     if not messages:
         return messages
     system = [m for m in messages if m.get("role") == "system"]
     other = [m for m in messages if m.get("role") != "system"]
-    trimmed = system[:1] + other[-history_limit:]
+    trimmed: List[Message] = system[:1] + other[-history_limit:]
     return trimmed
 
 
@@ -35,7 +38,7 @@ def main():
     system_prompt = load_system_prompt()
 
     # Conversation history
-    messages = [
+    messages: List[Message] = [
         {"role": "system", "content": system_prompt}
     ]
 
@@ -88,6 +91,7 @@ def main():
             try:
                 if tts:
                     tts.speak(assistant_reply)
+                    logging.info("TTS status after enqueue: %s", tts.status())
                 else:
                     logging.debug("TTS not enabled for this session")
             except Exception as e:
