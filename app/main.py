@@ -40,6 +40,18 @@ def main():
     ]
 
     memory_manager = MemoryManager()
+    # initialize TTS once to avoid repeated engine creation
+    try:
+        from app.tts import create_default_tts
+
+        tts = create_default_tts()
+        if tts:
+            logging.info("TTS initialized")
+        else:
+            logging.info("TTS disabled via environment")
+    except Exception:
+        tts = None
+        logging.debug("TTS module not available")
 
     print("Roha is online!")
     print("Type 'exit' to quit.")
@@ -72,15 +84,14 @@ def main():
             print("\nRoha:", assistant_reply)
             print()
 
-            # speak if TTS is enabled
+            # speak if TTS is available
             try:
-                from app.tts import create_default_tts
-
-                tts = create_default_tts()
                 if tts:
                     tts.speak(assistant_reply)
-            except Exception:
-                logging.debug("TTS unavailable or failed to speak")
+                else:
+                    logging.debug("TTS not enabled for this session")
+            except Exception as e:
+                logging.warning("TTS speak failed: %s", e)
 
     except KeyboardInterrupt:
         print("\nExiting...")
