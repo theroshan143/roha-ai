@@ -6,6 +6,7 @@ from app.types import Message
 from app.prompts import load_system_prompt
 from app.chat import chat_with_roha
 from app.memory import MemoryManager
+from app.tts import create_default_tts, get_voice_style
 
 
 # Ensure necessary directories exist
@@ -45,9 +46,13 @@ def main():
     memory_manager = MemoryManager()
     # initialize TTS once to avoid repeated engine creation
     try:
-        from app.tts import create_default_tts
+        voice_style = os.getenv("VOICE_STYLE", "casual").strip().lower()
+        if os.getenv("VOICE_ENABLED", "false").lower() in ("1", "true", "yes"):
+            style_preview = get_voice_style(voice_style).get("sample", "This is Roha.")
+            print(f"Using {voice_style} style: {style_preview}")
 
         tts = create_default_tts()
+
         if tts:
             logging.info("TTS initialized")
         else:
