@@ -7,6 +7,8 @@ from app.prompts import load_system_prompt
 from app.chat import chat_with_roha
 from app.memory import MemoryManager
 from app.tts import create_default_tts, get_voice_style
+from app.microphone import record_audio
+from app.stt import transcribe_audio
 
 
 # Ensure necessary directories exist
@@ -63,10 +65,17 @@ def main():
 
     print("Roha is online!")
     print("Type 'exit' to quit.")
+    mode = input("Choose mode (text/voice): ").strip().lower()
 
     try:
         while True:
-            user_input = input("You: ")
+            if mode == "voice":
+                print("Recording audio...")
+                audio_data = record_audio()
+                user_input = transcribe_audio(audio_data)
+                
+            else:
+                user_input = input("You: ")
 
             if user_input.lower() == "exit":
                 print("\nRoha: Goodbye!")
@@ -74,6 +83,9 @@ def main():
 
             # Add user's message to conversation and memory
             messages.append({"role": "user", "content": user_input})
+            if not user_input.strip():
+                print("Sorry I didn't catch that. Please try again.")
+                continue
             memory_manager.add_message("user", user_input)
 
             # Send trimmed history to the model to avoid token limits
@@ -82,7 +94,8 @@ def main():
             try:
                 assistant_reply = chat_with_roha(to_send)
             except Exception as e:
-                logging.error("Failed to get assistant reply: %s", e)
+                import traceback
+                traceback.print_exc()
                 assistant_reply = "I'm having trouble connecting to the model right now. Please try again later."
 
             # Save Roha's reply

@@ -387,3 +387,166 @@
 2026-07-16 20:11:02,933 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
 2026-07-16 20:11:02,950 INFO: TTS enqueued 161 chars (queue size=1)
 2026-07-16 20:11:02,993 INFO: TTS speaking (chars=161)
+2026-07-17 20:45:43,565 INFO: Imported existing <module 'comtypes.gen' from 'C:\\Users\\kumar\\roha-ai\\.venv\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2026-07-17 20:45:43,565 INFO: Using writeable comtypes cache directory: 'C:\Users\kumar\roha-ai\.venv\Lib\site-packages\comtypes\gen'
+2026-07-17 20:45:43,669 INFO: TTS engine ready on worker thread
+2026-07-17 20:45:43,670 INFO: TTS worker loop starting
+2026-07-17 20:45:43,670 INFO: TTS initialized
+2026-07-17 20:45:57,234 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:45:58,964 ERROR: Failed to get assistant reply: Ollama client not available: install 'ollama' or set up a mock for tests
+2026-07-17 20:45:58,979 INFO: TTS enqueued 77 chars (queue size=1)
+2026-07-17 20:45:58,980 INFO: TTS speaking (chars=77)
+2026-07-17 20:46:03,442 INFO: TTS finished speaking
+2026-07-17 20:46:03,444 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 20:46:08,590 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:46:10,194 ERROR: Failed to get assistant reply: Ollama client not available: install 'ollama' or set up a mock for tests
+2026-07-17 20:46:10,207 INFO: TTS enqueued 77 chars (queue size=1)
+2026-07-17 20:46:10,231 INFO: TTS speaking (chars=77)
+2026-07-17 20:46:14,687 INFO: TTS finished speaking
+2026-07-17 20:46:14,690 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 20:46:19,828 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:46:21,626 ERROR: Failed to get assistant reply: Ollama client not available: install 'ollama' or set up a mock for tests
+2026-07-17 20:46:21,629 INFO: TTS enqueued 77 chars (queue size=1)
+2026-07-17 20:46:21,656 INFO: TTS speaking (chars=77)
+2026-07-17 20:46:26,115 INFO: TTS finished speaking
+2026-07-17 20:46:26,117 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 20:46:31,269 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:46:31,792 ERROR: Failed to get assistant reply: Ollama client not available: install 'ollama' or set up a mock for tests
+2026-07-17 20:46:31,795 INFO: TTS enqueued 77 chars (queue size=1)
+2026-07-17 20:46:31,820 INFO: TTS speaking (chars=77)
+2026-07-17 20:46:36,274 INFO: TTS finished speaking
+2026-07-17 20:46:36,279 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 20:46:41,418 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:46:42,001 ERROR: Failed to get assistant reply: Ollama client not available: install 'ollama' or set up a mock for tests
+2026-07-17 20:46:42,004 INFO: TTS enqueued 77 chars (queue size=1)
+2026-07-17 20:46:42,029 INFO: TTS speaking (chars=77)
+2026-07-17 20:46:46,481 INFO: TTS finished speaking
+2026-07-17 20:46:46,484 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 20:47:36,924 INFO: Imported existing <module 'comtypes.gen' from 'C:\\Users\\kumar\\roha-ai\\.venv\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2026-07-17 20:47:36,924 INFO: Using writeable comtypes cache directory: 'C:\Users\kumar\roha-ai\.venv\Lib\site-packages\comtypes\gen'
+2026-07-17 20:47:37,019 INFO: TTS engine ready on worker thread
+2026-07-17 20:47:37,019 INFO: TTS worker loop starting
+2026-07-17 20:47:37,019 INFO: TTS initialized
+2026-07-17 20:47:47,343 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:47:47,885 ERROR: Failed to get assistant reply: Ollama client not available: install 'ollama' or set up a mock for tests
+2026-07-17 20:47:47,889 INFO: TTS enqueued 77 chars (queue size=1)
+2026-07-17 20:47:47,889 INFO: TTS speaking (chars=77)
+2026-07-17 20:47:52,347 INFO: TTS finished speaking
+2026-07-17 20:47:52,348 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 20:47:57,488 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:48:03,109 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:48:03,691 ERROR: Failed to get assistant reply: Ollama client not available: install 'ollama' or set up a mock for tests
+2026-07-17 20:48:03,695 INFO: TTS enqueued 77 chars (queue size=1)
+2026-07-17 20:48:03,718 INFO: TTS speaking (chars=77)
+2026-07-17 20:48:08,169 INFO: TTS finished speaking
+2026-07-17 20:48:08,171 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 20:48:13,306 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:48:15,152 ERROR: Failed to get assistant reply: Ollama client not available: install 'ollama' or set up a mock for tests
+2026-07-17 20:48:15,155 INFO: TTS enqueued 77 chars (queue size=1)
+2026-07-17 20:48:15,180 INFO: TTS speaking (chars=77)
+2026-07-17 20:48:19,689 INFO: TTS finished speaking
+2026-07-17 20:48:19,690 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 20:48:24,825 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:48:30,663 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:48:31,256 ERROR: Failed to get assistant reply: Ollama client not available: install 'ollama' or set up a mock for tests
+2026-07-17 20:48:31,270 INFO: TTS enqueued 77 chars (queue size=1)
+2026-07-17 20:48:31,295 INFO: TTS speaking (chars=77)
+2026-07-17 20:48:35,751 INFO: TTS finished speaking
+2026-07-17 20:48:35,753 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 20:48:40,891 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:48:41,448 ERROR: Failed to get assistant reply: Ollama client not available: install 'ollama' or set up a mock for tests
+2026-07-17 20:48:41,451 INFO: TTS enqueued 77 chars (queue size=1)
+2026-07-17 20:48:41,479 INFO: TTS speaking (chars=77)
+2026-07-17 20:48:45,933 INFO: TTS finished speaking
+2026-07-17 20:48:45,936 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 20:48:51,071 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:48:51,651 ERROR: Failed to get assistant reply: Ollama client not available: install 'ollama' or set up a mock for tests
+2026-07-17 20:48:51,664 INFO: TTS enqueued 77 chars (queue size=1)
+2026-07-17 20:48:51,689 INFO: TTS speaking (chars=77)
+2026-07-17 20:48:56,148 INFO: TTS finished speaking
+2026-07-17 20:48:56,153 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 20:49:01,291 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:49:01,867 ERROR: Failed to get assistant reply: Ollama client not available: install 'ollama' or set up a mock for tests
+2026-07-17 20:49:01,881 INFO: TTS enqueued 77 chars (queue size=1)
+2026-07-17 20:49:01,906 INFO: TTS speaking (chars=77)
+2026-07-17 20:49:06,358 INFO: TTS finished speaking
+2026-07-17 20:49:06,360 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 20:49:11,503 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:49:12,106 ERROR: Failed to get assistant reply: Ollama client not available: install 'ollama' or set up a mock for tests
+2026-07-17 20:49:12,120 INFO: TTS enqueued 77 chars (queue size=1)
+2026-07-17 20:49:12,144 INFO: TTS speaking (chars=77)
+2026-07-17 20:49:16,596 INFO: TTS finished speaking
+2026-07-17 20:49:16,598 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 20:49:21,745 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:49:22,330 ERROR: Failed to get assistant reply: Ollama client not available: install 'ollama' or set up a mock for tests
+2026-07-17 20:49:22,343 INFO: TTS enqueued 77 chars (queue size=1)
+2026-07-17 20:49:22,370 INFO: TTS speaking (chars=77)
+2026-07-17 20:49:26,821 INFO: TTS finished speaking
+2026-07-17 20:49:26,823 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 20:49:31,962 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:49:37,598 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:49:38,082 INFO: TTS worker received shutdown signal
+2026-07-17 20:49:38,082 INFO: TTS shut down
+2026-07-17 20:52:25,597 INFO: Imported existing <module 'comtypes.gen' from 'C:\\Users\\kumar\\roha-ai\\.venv\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2026-07-17 20:52:25,597 INFO: Using writeable comtypes cache directory: 'C:\Users\kumar\roha-ai\.venv\Lib\site-packages\comtypes\gen'
+2026-07-17 20:52:25,695 INFO: TTS engine ready on worker thread
+2026-07-17 20:52:25,695 INFO: TTS worker loop starting
+2026-07-17 20:52:25,696 INFO: TTS initialized
+2026-07-17 20:52:34,695 INFO: TTS worker received shutdown signal
+2026-07-17 20:52:34,695 INFO: TTS shut down
+2026-07-17 20:52:50,767 INFO: Imported existing <module 'comtypes.gen' from 'C:\\Users\\kumar\\roha-ai\\.venv\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2026-07-17 20:52:50,767 INFO: Using writeable comtypes cache directory: 'C:\Users\kumar\roha-ai\.venv\Lib\site-packages\comtypes\gen'
+2026-07-17 20:52:50,862 INFO: TTS engine ready on worker thread
+2026-07-17 20:52:50,862 INFO: TTS worker loop starting
+2026-07-17 20:52:50,862 INFO: TTS initialized
+2026-07-17 20:52:59,217 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:52:59,764 ERROR: Failed to get assistant reply: Ollama client not available: install 'ollama' or set up a mock for tests
+2026-07-17 20:52:59,769 INFO: TTS enqueued 77 chars (queue size=1)
+2026-07-17 20:52:59,771 INFO: TTS speaking (chars=77)
+2026-07-17 20:53:04,226 INFO: TTS finished speaking
+2026-07-17 20:53:04,231 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 20:53:09,371 INFO: Processing audio with duration 00:05.000
+2026-07-17 20:53:09,839 ERROR: Failed to get assistant reply: Ollama client not available: install 'ollama' or set up a mock for tests
+2026-07-17 20:53:09,844 INFO: TTS enqueued 77 chars (queue size=1)
+2026-07-17 20:53:09,873 INFO: TTS speaking (chars=77)
+2026-07-17 20:53:14,333 INFO: TTS finished speaking
+2026-07-17 20:53:14,337 INFO: TTS worker received shutdown signal
+2026-07-17 20:53:14,337 INFO: TTS shut down
+2026-07-17 21:03:09,965 INFO: Imported existing <module 'comtypes.gen' from 'C:\\Users\\kumar\\roha-ai\\.venv\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2026-07-17 21:03:09,965 INFO: Using writeable comtypes cache directory: 'C:\Users\kumar\roha-ai\.venv\Lib\site-packages\comtypes\gen'
+2026-07-17 21:03:10,061 INFO: TTS engine ready on worker thread
+2026-07-17 21:03:10,061 INFO: TTS worker loop starting
+2026-07-17 21:03:10,061 INFO: TTS initialized
+2026-07-17 21:03:19,502 INFO: Processing audio with duration 00:05.000
+2026-07-17 21:03:20,141 INFO: TTS enqueued 77 chars (queue size=1)
+2026-07-17 21:03:20,142 INFO: TTS speaking (chars=77)
+2026-07-17 21:03:24,903 INFO: TTS finished speaking
+2026-07-17 21:03:24,905 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 21:03:30,025 INFO: TTS worker received shutdown signal
+2026-07-17 21:03:30,026 INFO: TTS shut down
+2026-07-17 21:06:06,335 INFO: Imported existing <module 'comtypes.gen' from 'C:\\Users\\kumar\\roha-ai\\.venv\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2026-07-17 21:06:06,336 INFO: Using writeable comtypes cache directory: 'C:\Users\kumar\roha-ai\.venv\Lib\site-packages\comtypes\gen'
+2026-07-17 21:06:06,436 INFO: TTS engine ready on worker thread
+2026-07-17 21:06:06,436 INFO: TTS worker loop starting
+2026-07-17 21:06:06,436 INFO: TTS initialized
+2026-07-17 21:06:14,751 INFO: Processing audio with duration 00:05.000
+2026-07-17 21:06:23,181 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-17 21:06:23,199 INFO: TTS enqueued 76 chars (queue size=1)
+2026-07-17 21:06:23,200 INFO: TTS speaking (chars=76)
+2026-07-17 21:06:28,228 INFO: TTS finished speaking
+2026-07-17 21:06:28,230 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 21:06:33,369 INFO: Processing audio with duration 00:05.000
+2026-07-17 21:06:37,519 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-17 21:06:37,535 INFO: TTS enqueued 351 chars (queue size=1)
+2026-07-17 21:06:37,563 INFO: TTS speaking (chars=351)
+2026-07-17 21:06:56,264 INFO: TTS finished speaking
+2026-07-17 21:06:56,269 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 21:07:01,415 INFO: Processing audio with duration 00:05.000
+2026-07-17 21:07:03,837 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-17 21:07:03,846 INFO: TTS enqueued 109 chars (queue size=1)
+2026-07-17 21:07:03,883 INFO: TTS speaking (chars=109)
+2026-07-17 21:07:10,009 INFO: TTS finished speaking
+2026-07-17 21:07:10,014 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-17 21:07:15,159 INFO: Processing audio with duration 00:05.000
+2026-07-17 21:07:15,641 INFO: TTS worker received shutdown signal
+2026-07-17 21:07:15,642 INFO: TTS shut down
