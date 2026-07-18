@@ -7,7 +7,7 @@ from app.prompts import load_system_prompt
 from app.chat import chat_with_roha
 from app.memory import MemoryManager
 from app.tts import create_default_tts, get_voice_style
-from app.microphone import record_audio
+from app.microphone import record_until_silence
 from app.stt import transcribe_audio
 
 
@@ -71,7 +71,7 @@ def main():
         while True:
             if mode == "voice":
                 print("Recording audio...")
-                audio_data = record_audio()
+                audio_data = record_until_silence()
                 user_input = transcribe_audio(audio_data)
                 
             else:

@@ -550,3 +550,85 @@
 2026-07-17 21:07:15,159 INFO: Processing audio with duration 00:05.000
 2026-07-17 21:07:15,641 INFO: TTS worker received shutdown signal
 2026-07-17 21:07:15,642 INFO: TTS shut down
+2026-07-18 12:33:22,591 INFO: Imported existing <module 'comtypes.gen' from 'C:\\Users\\kumar\\roha-ai\\.venv\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2026-07-18 12:33:22,591 INFO: Using writeable comtypes cache directory: 'C:\Users\kumar\roha-ai\.venv\Lib\site-packages\comtypes\gen'
+2026-07-18 12:33:22,991 INFO: TTS engine ready on worker thread
+2026-07-18 12:33:22,991 INFO: TTS worker loop starting
+2026-07-18 12:33:22,991 INFO: TTS initialized
+2026-07-18 12:33:49,149 INFO: Processing audio with duration 00:05.000
+2026-07-18 12:34:05,246 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-18 12:34:05,250 INFO: TTS enqueued 209 chars (queue size=1)
+2026-07-18 12:34:05,256 INFO: TTS speaking (chars=209)
+2026-07-18 12:34:18,947 INFO: TTS finished speaking
+2026-07-18 12:34:18,954 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-18 12:34:24,256 INFO: Processing audio with duration 00:05.000
+2026-07-18 12:34:29,586 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-18 12:34:29,589 INFO: TTS enqueued 388 chars (queue size=1)
+2026-07-18 12:34:29,638 INFO: TTS speaking (chars=388)
+2026-07-18 12:34:51,094 INFO: TTS finished speaking
+2026-07-18 12:34:51,100 INFO: TTS worker received shutdown signal
+2026-07-18 12:34:51,100 INFO: TTS shut down
+2026-07-18 13:06:10,084 INFO: Imported existing <module 'comtypes.gen' from 'C:\\Users\\kumar\\roha-ai\\.venv\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2026-07-18 13:06:10,092 INFO: Using writeable comtypes cache directory: 'C:\Users\kumar\roha-ai\.venv\Lib\site-packages\comtypes\gen'
+2026-07-18 13:06:10,256 INFO: TTS engine ready on worker thread
+2026-07-18 13:06:10,256 INFO: TTS worker loop starting
+2026-07-18 13:06:10,256 INFO: TTS initialized
+2026-07-18 13:06:20,863 INFO: Processing audio with duration 00:05.000
+2026-07-18 13:06:28,763 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-18 13:06:28,777 INFO: TTS enqueued 108 chars (queue size=1)
+2026-07-18 13:06:28,779 INFO: TTS speaking (chars=108)
+2026-07-18 13:06:36,419 INFO: TTS finished speaking
+2026-07-18 13:06:36,424 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-18 13:06:41,644 INFO: Processing audio with duration 00:05.000
+2026-07-18 13:06:44,249 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-18 13:06:44,255 INFO: TTS enqueued 123 chars (queue size=1)
+2026-07-18 13:06:44,295 INFO: TTS speaking (chars=123)
+2026-07-18 13:06:51,840 INFO: TTS finished speaking
+2026-07-18 13:06:51,846 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-18 13:06:57,060 INFO: Processing audio with duration 00:05.000
+2026-07-18 13:07:01,347 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-18 13:07:01,352 INFO: TTS enqueued 267 chars (queue size=1)
+2026-07-18 13:07:01,391 INFO: TTS speaking (chars=267)
+2026-07-18 13:07:14,388 INFO: TTS finished speaking
+2026-07-18 13:07:14,394 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-18 13:07:19,647 INFO: Processing audio with duration 00:05.000
+2026-07-18 13:07:28,559 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-18 13:07:28,574 INFO: TTS enqueued 842 chars (queue size=1)
+2026-07-18 13:07:28,627 INFO: TTS speaking (chars=842)
+2026-07-18 13:08:11,645 INFO: TTS finished speaking
+2026-07-18 13:08:11,646 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-18 13:08:16,887 INFO: Processing audio with duration 00:05.000
+2026-07-18 13:08:21,116 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-18 13:08:21,134 INFO: TTS enqueued 240 chars (queue size=1)
+2026-07-18 13:08:21,177 INFO: TTS speaking (chars=240)
+2026-07-18 13:08:34,769 INFO: TTS finished speaking
+2026-07-18 13:08:34,773 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-18 13:08:40,020 INFO: Processing audio with duration 00:05.000
+2026-07-18 13:08:56,254 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-18 13:08:56,272 INFO: TTS enqueued 834 chars (queue size=1)
+2026-07-18 13:08:56,331 INFO: TTS speaking (chars=834)
+2026-07-18 13:09:56,281 WARNING: TTS speak timed out waiting for worker to finish
+2026-07-18 13:09:56,281 INFO: TTS status after enqueue: {'enabled': True, 'engine': True, 'worker_alive': True, 'queue_size': 0}
+2026-07-18 13:10:01,489 INFO: Processing audio with duration 00:05.000
+2026-07-18 13:10:16,480 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-18 13:10:16,496 INFO: TTS enqueued 215 chars (queue size=1)
+2026-07-18 13:10:24,911 INFO: TTS finished speaking
+2026-07-18 13:10:24,971 INFO: TTS speaking (chars=215)
+2026-07-18 13:10:39,738 INFO: TTS finished speaking
+2026-07-18 13:10:39,742 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-18 13:10:44,900 INFO: TTS worker received shutdown signal
+2026-07-18 13:10:44,900 INFO: TTS shut down
+2026-07-18 13:17:22,644 INFO: Imported existing <module 'comtypes.gen' from 'C:\\Users\\kumar\\roha-ai\\.venv\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2026-07-18 13:17:22,644 INFO: Using writeable comtypes cache directory: 'C:\Users\kumar\roha-ai\.venv\Lib\site-packages\comtypes\gen'
+2026-07-18 13:17:22,802 INFO: TTS engine ready on worker thread
+2026-07-18 13:17:22,802 INFO: TTS worker loop starting
+2026-07-18 13:17:22,802 INFO: TTS initialized
+2026-07-18 13:17:40,071 INFO: Processing audio with duration 00:10.500
+2026-07-18 13:17:54,341 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-18 13:17:54,357 INFO: TTS enqueued 571 chars (queue size=1)
+2026-07-18 13:17:54,361 INFO: TTS speaking (chars=571)
+2026-07-18 13:18:22,712 INFO: TTS finished speaking
+2026-07-18 13:18:22,717 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-18 13:18:29,540 INFO: Processing audio with duration 00:05.250
+2026-07-18 13:18:30,405 INFO: TTS worker received shutdown signal
+2026-07-18 13:18:30,405 INFO: TTS shut down
