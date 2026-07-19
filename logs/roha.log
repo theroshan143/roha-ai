@@ -632,3 +632,66 @@
 2026-07-18 13:18:29,540 INFO: Processing audio with duration 00:05.250
 2026-07-18 13:18:30,405 INFO: TTS worker received shutdown signal
 2026-07-18 13:18:30,405 INFO: TTS shut down
+2026-07-19 12:11:46,428 INFO: Imported existing <module 'comtypes.gen' from 'C:\\Users\\kumar\\roha-ai\\.venv\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2026-07-19 12:11:46,429 INFO: Using writeable comtypes cache directory: 'C:\Users\kumar\roha-ai\.venv\Lib\site-packages\comtypes\gen'
+2026-07-19 12:11:46,658 INFO: TTS engine ready on worker thread
+2026-07-19 12:11:46,658 INFO: TTS worker loop starting
+2026-07-19 12:11:46,658 INFO: TTS initialized
+2026-07-19 12:12:00,925 INFO: Processing audio with duration 00:07.500
+2026-07-19 12:12:12,808 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-19 12:12:12,824 INFO: TTS enqueued 373 chars (queue size=1)
+2026-07-19 12:12:12,826 INFO: TTS speaking (chars=373)
+2026-07-19 12:12:30,993 INFO: TTS finished speaking
+2026-07-19 12:12:30,999 INFO: TTS worker received shutdown signal
+2026-07-19 12:12:30,999 INFO: TTS shut down
+2026-07-19 12:12:44,763 INFO: Imported existing <module 'comtypes.gen' from 'C:\\Users\\kumar\\roha-ai\\.venv\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2026-07-19 12:12:44,764 INFO: Using writeable comtypes cache directory: 'C:\Users\kumar\roha-ai\.venv\Lib\site-packages\comtypes\gen'
+2026-07-19 12:12:44,871 INFO: TTS engine ready on worker thread
+2026-07-19 12:12:44,871 INFO: TTS worker loop starting
+2026-07-19 12:12:44,871 INFO: TTS initialized
+2026-07-19 12:12:52,322 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-19 12:12:52,337 INFO: TTS enqueued 34 chars (queue size=1)
+2026-07-19 12:12:52,338 INFO: TTS speaking (chars=34)
+2026-07-19 12:12:55,490 INFO: TTS finished speaking
+2026-07-19 12:12:55,495 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-19 12:13:20,763 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-19 12:13:20,777 INFO: TTS enqueued 279 chars (queue size=1)
+2026-07-19 12:13:20,809 INFO: TTS speaking (chars=279)
+2026-07-19 12:13:37,195 INFO: TTS finished speaking
+2026-07-19 12:13:37,198 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-19 23:33:16,531 INFO: Imported existing <module 'comtypes.gen' from 'C:\\Users\\kumar\\roha-ai\\.venv\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2026-07-19 23:33:16,531 INFO: Using writeable comtypes cache directory: 'C:\Users\kumar\roha-ai\.venv\Lib\site-packages\comtypes\gen'
+2026-07-19 23:33:16,734 INFO: TTS engine ready on worker thread
+2026-07-19 23:33:16,734 INFO: TTS worker loop starting
+2026-07-19 23:33:16,826 INFO: TTS initialized
+2026-07-19 23:33:42,041 INFO: Processing audio with duration 00:17.750
+2026-07-19 23:33:54,667 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-19 23:33:54,672 INFO: TTS enqueued 124 chars (queue size=1)
+2026-07-19 23:33:54,673 INFO: TTS speaking (chars=124)
+2026-07-19 23:33:59,475 INFO: TTS finished speaking
+2026-07-19 23:33:59,668 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-19 23:34:09,511 INFO: Processing audio with duration 00:08.000
+2026-07-19 23:34:13,002 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-19 23:34:13,007 INFO: TTS enqueued 147 chars (queue size=1)
+2026-07-19 23:34:13,039 INFO: TTS speaking (chars=147)
+2026-07-19 23:34:20,639 INFO: TTS finished speaking
+2026-07-19 23:34:20,643 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-19 23:34:27,715 INFO: Processing audio with duration 00:05.750
+2026-07-19 23:34:31,468 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-19 23:34:31,472 INFO: TTS enqueued 277 chars (queue size=1)
+2026-07-19 23:34:31,506 INFO: TTS speaking (chars=277)
+2026-07-19 23:34:43,049 INFO: TTS finished speaking
+2026-07-19 23:34:43,196 INFO: TTS worker received shutdown signal
+2026-07-19 23:34:43,198 INFO: TTS shut down
+2026-07-19 23:34:52,377 INFO: Imported existing <module 'comtypes.gen' from 'C:\\Users\\kumar\\roha-ai\\.venv\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2026-07-19 23:34:52,378 INFO: Using writeable comtypes cache directory: 'C:\Users\kumar\roha-ai\.venv\Lib\site-packages\comtypes\gen'
+2026-07-19 23:34:52,474 INFO: TTS engine ready on worker thread
+2026-07-19 23:34:52,475 INFO: TTS worker loop starting
+2026-07-19 23:34:52,568 INFO: TTS initialized
+2026-07-19 23:35:15,485 INFO: HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-07-19 23:35:15,491 INFO: TTS enqueued 757 chars (queue size=1)
+2026-07-19 23:35:15,495 INFO: TTS speaking (chars=757)
+2026-07-19 23:35:17,789 INFO: TTS finished speaking
+2026-07-19 23:35:17,992 INFO: TTS status after enqueue: {'enabled': True, 'engine': False, 'worker_alive': True, 'queue_size': 0}
+2026-07-19 23:35:22,281 INFO: TTS worker received shutdown signal
+2026-07-19 23:35:22,281 INFO: TTS shut down

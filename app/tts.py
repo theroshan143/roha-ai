@@ -121,6 +121,22 @@ def find_zira_voice_id() -> Optional[str]:
 class TTSManager:
     """Threaded TTS manager: enqueues text and speaks in a background thread."""
 
+    def stop(self):
+        """Stop current speech and clear queued speech."""
+        try:
+            if self.engine:
+                self.engine.stop()
+
+            while not self._queue.empty():
+                try:
+                    self._queue.get_nowait()
+                    self._queue.task_done()
+                except Exception:
+                    break
+
+        except Exception as e:
+            logging.warning("Failed to stop TTS: %s", e)
+   
     def __init__(self, voice_gender: str = "female", voice_id: Optional[str] = None, voice_style: str = "professional"):
         self.enabled = True
         self.engine = None

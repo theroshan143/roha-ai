@@ -9,6 +9,7 @@ from app.memory import MemoryManager
 from app.tts import create_default_tts, get_voice_style
 from app.microphone import record_until_silence
 from app.stt import transcribe_audio
+from app.keyboard_listener import watch_for_stop
 
 
 # Ensure necessary directories exist
@@ -56,6 +57,7 @@ def main():
         tts = create_default_tts()
 
         if tts:
+            watch_for_stop(tts)
             logging.info("TTS initialized")
         else:
             logging.info("TTS disabled via environment")
