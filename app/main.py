@@ -61,6 +61,10 @@ def main():
     ]
 
     memory_manager = MemoryManager(DB_PATH)
+    # circuit breaker for model calls
+    from app.circuit_breaker import CircuitBreaker
+    cb = CircuitBreaker()
+
     # initialize TTS once to avoid repeated engine creation
     try:
         voice_style = os.getenv("VOICE_STYLE", "casual").strip().lower()
@@ -153,12 +157,19 @@ def main():
             to_send = trimmed_messages(messages, history_limit=HISTORY_LIMIT)
 
             try:
-                try:
-                    assistant_reply = _call_model_with_timeout(to_send, timeout=int(os.getenv("MODEL_TIMEOUT", "30")))
-                except Exception as e:
-                    logging.exception("Model call failed")
-                    assistant_reply = "I'm having trouble connecting to the model right now. Please try again later."
-
+                if not cb.call_allowed():
+                    wait_seconds = cb.time_until_reset()
+                    logging.warning("Circuit breaker open; skipping model call for %d seconds", wait_seconds)
+                    assistant_reply = "The model is temporarily unavailable due to repeated errors. Please try again later."
+                else:
+                    try:
+                        assistant_reply = _call_model_with_timeout(to_send, timeout=int(os.getenv("MODEL_TIMEOUT", "30")))
+                        # model succeeded
+                        cb.record_success()
+                    except Exception as e:
+                        logging.exception("Model call failed")
+                        cb.record_failure()
+                        assistant_reply = "I'm having trouble connecting to the model right now. Please try again later."
             except Exception:
                 logging.exception("Unexpected model error")
                 assistant_reply = "Sorry, something went wrong while generating a response."
@@ -169,6 +180,15 @@ def main():
                 memory_manager.add_message("assistant", assistant_reply)
             except Exception:
                 logging.exception("Failed to persist assistant message")
+
+            # occasionally summarize memory to keep DB small
+            try:
+                # summarize every 20 assistant responses
+                last_assistant_count = sum(1 for m in messages if m.get("role") == "assistant")
+                if last_assistant_count % 20 == 0:
+                    memory_manager.summarize_memory(keep_last=200)
+            except Exception:
+                logging.exception("Memory summarization failed")
 
             print("\nRoha:", assistant_reply)
             print()

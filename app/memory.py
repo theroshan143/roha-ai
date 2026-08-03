@@ -60,12 +60,44 @@ class MemoryManager:
         rows2: List[Tuple[Any, ...]] = self.cursor.fetchall()
         return [row[0] for row in rows2]
 
-    def summarize_memory(self, keep_last: int = 50) -> None:
+    def get_relevant_memories(self, query: str, k: int = 5) -> List[str]:
+        """Return up to k most relevant memory contents for the given query.
+
+        This uses fuzzy string matching (rapidfuzz) as a lightweight semantic proxy.
+        If rapidfuzz is not available, falls back to recent messages.
+        """
+        try:
+            from rapidfuzz import fuzz
+        except Exception:
+            # rapidfuzz not installed; fallback to recency
+            return self.get_memories(limit=k)
+
+        # fetch recent N candidates to rank (bounded for performance)
+        candidate_limit = max(200, k * 20)
+        self.cursor.execute(
+            "SELECT content FROM messages ORDER BY id DESC LIMIT ?", (candidate_limit,)
+        )
+        rows = [r[0] for r in self.cursor.fetchall()]
+        if not rows:
+            return []
+
+        scored = []
+        for r in rows:
+            try:
+                score = fuzz.token_set_ratio(query, r)
+            except Exception:
+                score = 0
+            scored.append((score, r))
+
+        scored.sort(key=lambda x: x[0], reverse=True)
+        top = [t[1] for t in scored[:k]]
+        return list(reversed(top))  # return oldest->newest ordering for selected items
+
+    def summarize_memory(self, keep_last: int = 50, use_llm: bool = True) -> None:
         """Collapse older messages into a single summary entry.
 
-        This is a naive summarization step (no LLM call). It concatenates
-        older messages into a short summary placeholder and deletes the
-        original rows. For production, replace with an LLM-based summary.
+        If use_llm is True, attempt to use the chat model to generate a concise
+        summary. Falls back to a naive concatenation if the model call fails.
         """
         try:
             # count total messages
@@ -84,9 +116,20 @@ class MemoryManager:
             if not rows:
                 return
 
-            # naive summary: join contents
-            combined = " \n".join([f"{r[1]}: {r[2]}" for r in rows])
-            summary_text = f"[Summarized {len(rows)} messages]\n" + (combined[:4000] + "..." if len(combined) > 4000 else combined)
+            texts = [f"{r[1]}: {r[2]}" for r in rows]
+
+            summary_text = None
+            if use_llm:
+                try:
+                    from app.summarizer import summarize_texts
+
+                    summary_text = summarize_texts(texts, max_chars=4000)
+                except Exception:
+                    logging.exception("LLM-based summarization failed, falling back to naive summary")
+
+            if not summary_text:
+                combined = " \n".join(texts)
+                summary_text = (combined[:4000] + "...") if len(combined) > 4000 else combined
 
             # delete summarized rows using parameterized query
             ids: List[int] = [r[0] for r in rows]
