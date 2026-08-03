@@ -1,5 +1,6 @@
 import os
 import time
+import logging
 
 import numpy as np
 import sounddevice as sd
@@ -13,7 +14,7 @@ def record_audio(
 ):
     """Record for a fixed duration (used for testing)."""
 
-    os.makedirs("recordings", exist_ok=True)
+    os.makedirs(os.path.dirname(filename) or "recordings", exist_ok=True)
 
     print("🎤 Speak now...")
 
@@ -33,12 +34,12 @@ def record_audio(
     return filename
 
 
-def record_until_silence(
+def record_wake_audio(
     filename="recordings/input.wav",
     sample_rate=16000,
     silence_threshold=500,
-    silence_duration=1.2,
-    max_duration=30,
+    silence_duration=1.5,
+    max_duration=3.5,
 ):
     """
     Record until the user stops speaking.
@@ -48,7 +49,7 @@ def record_until_silence(
     without changing the rest of the application.
     """
 
-    os.makedirs("recordings", exist_ok=True)
+    os.makedirs(os.path.dirname(filename) or "recordings", exist_ok=True)
 
     print("🎤 Listening... (speak naturally)")
 
@@ -58,44 +59,57 @@ def record_until_silence(
 
     block_size = int(sample_rate * 0.25)  # 250 ms
 
-    with sd.InputStream(
-        samplerate=sample_rate,
-        channels=1,
-        dtype="int16",
-        blocksize=block_size,
-    ):
+    try:
+        with sd.InputStream(
+            samplerate=sample_rate,
+            channels=1,
+            dtype="int16",
+            blocksize=block_size,
+        ) as stream:
 
-        while True:
+            while True:
+                block, overflowed = stream.read(block_size)
+                if overflowed:
+                    print("⚠️  Audio buffer overflowed!")
 
-            block, _ = sd.rec(
-                block_size,
-                samplerate=sample_rate,
-                channels=1,
-                dtype="int16",
-            ), None
+                # append only if block has data
+                if block is not None and len(block) > 0:
+                    recording.append(block)
 
-            sd.wait()
+                try:
+                    rms = np.sqrt(np.mean(block.astype(np.float32) ** 2))
+                except Exception:
+                    rms = 0
 
-            recording.append(block)
+                if rms > silence_threshold:
+                    silence_start = None
 
-            rms = np.sqrt(np.mean(block.astype(np.float32) ** 2))
+                else:
+                    if silence_start is None:
+                        silence_start = time.time()
 
-            if rms > silence_threshold:
-                silence_start = None
+                    elif time.time() - silence_start >= silence_duration:
+                        print("🛑 Silence detected.")
+                        break
 
-            else:
-                if silence_start is None:
-                    silence_start = time.time()
-
-                elif time.time() - silence_start >= silence_duration:
-                    print("🛑 Silence detected.")
+                if time.time() - start_time > max_duration:
+                    print("⏱ Maximum recording duration reached.")
                     break
+    except Exception:
+        logging.exception("Error during audio capture")
 
-            if time.time() - start_time > max_duration:
-                print("⏱ Maximum recording duration reached.")
-                break
+    if not recording:
+        # write a short silent file to avoid downstream errors
+        logging.warning("No audio captured; creating short silent file %s", filename)
+        silent = np.zeros(int(0.1 * sample_rate), dtype="int16")
+        write(filename, sample_rate, silent)
+        return filename
 
-    audio = np.concatenate(recording, axis=0)
+    try:
+        audio = np.concatenate(recording, axis=0)
+    except Exception:
+        logging.exception("Failed to concatenate audio blocks; falling back to last block")
+        audio = recording[-1]
 
     write(filename, sample_rate, audio)
 

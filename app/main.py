@@ -1,40 +1,54 @@
 import logging
 import os
 from typing import List
+import concurrent.futures
 
 from app.types import Message
 from app.prompts import load_system_prompt
 from app.chat import chat_with_roha
 from app.memory import MemoryManager
 from app.tts import create_default_tts, get_voice_style
-from app.microphone import record_until_silence
+from app.microphone import record_wake_audio
 from app.stt import transcribe_audio
 from app.keyboard_listener import watch_for_stop
+from app.wake_detector import wait_for_wake_word
+from app.config import LOG_PATH, DB_PATH, HISTORY_LIMIT
 
 
 # Ensure necessary directories exist
-os.makedirs("logs", exist_ok=True)
-os.makedirs("data", exist_ok=True)
+os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
+os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 
 # Logging to console and file
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s: %(message)s",
     handlers=[
-        logging.FileHandler("logs/roha.log", encoding="utf-8"),
+        logging.FileHandler(LOG_PATH, encoding="utf-8"),
         logging.StreamHandler()
     ],
 )
 
 
-def trimmed_messages(messages: List[Message], history_limit: int = 12) -> List[Message]:
+def trimmed_messages(messages: List[Message], history_limit: int = HISTORY_LIMIT) -> List[Message]:
     """Return a trimmed copy of messages keeping the system prompt and last N messages."""
     if not messages:
         return messages
     system = [m for m in messages if m.get("role") == "system"]
     other = [m for m in messages if m.get("role") != "system"]
-    trimmed: List[Message] = system[:1] + other[-history_limit:]
+    trimmed: List[Message] = (system[:1] if system else []) + other[-history_limit:]
     return trimmed
+
+
+def _call_model_with_timeout(messages, timeout: int = 30) -> str:
+    """Call the chat model with a timeout using a thread to avoid blocking the main loop."""
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+        fut = ex.submit(chat_with_roha, messages)
+        try:
+            return fut.result(timeout=timeout)
+        except concurrent.futures.TimeoutError:
+            fut.cancel()
+            raise TimeoutError("Model request timed out")
 
 
 def main():
@@ -46,7 +60,7 @@ def main():
         {"role": "system", "content": system_prompt}
     ]
 
-    memory_manager = MemoryManager()
+    memory_manager = MemoryManager(DB_PATH)
     # initialize TTS once to avoid repeated engine creation
     try:
         voice_style = os.getenv("VOICE_STYLE", "casual").strip().lower()
@@ -65,19 +79,67 @@ def main():
         tts = None
         logging.debug("TTS module not available")
 
-    print("Roha is online!")
-    print("Type 'exit' to quit.")
-    mode = input("Choose mode (text/voice): ").strip().lower()
+    print("=" * 40)
+    print("          ROHA")
+    print("=" * 40)
+    print("1. Text Mode")
+    print("2. Voice Mode")
+    print("3. Wake Word Mode")
+    print("0. Exit")
+    print("=" * 40)
+
+    choice = input("Select mode: ").strip()
+    if choice == "1":
+        mode = "text"
+
+    elif choice == "2":
+        mode = "voice"
+
+    elif choice == "3":
+        mode = "wake"
+
+    elif choice == "0":
+        print("Goodbye!")
+        return
+
+    else:
+        print("Invalid choice.")
+        return
 
     try:
         while True:
-            if mode == "voice":
-                print("Recording audio...")
-                audio_data = record_until_silence()
-                user_input = transcribe_audio(audio_data)
+            user_input = None
+            if mode == "text":
+                raw = input("You: ")
+                user_input = raw.strip() if raw is not None else ""
+
+            elif mode == "voice":
+                audio_path = record_wake_audio()
+                raw = transcribe_audio(audio_path)
+                user_input = raw.strip() if raw else ""
+                print(f"You: {user_input}")
+                
+            elif mode == "wake":
+                wait_for_wake_word()
+                print("Roha: Yes?")
+                if tts:
+                    try:
+                        tts.speak("Yes?")
+                    except Exception:
+                        logging.exception("TTS 'Yes?' speak failed")
+                audio_path = record_wake_audio()
+                raw = transcribe_audio(audio_path)
+                user_input = raw.strip() if raw else ""
+                print(f"You: {user_input}")
                 
             else:
-                user_input = input("You: ")
+                raw = input("You: ")
+                user_input = raw.strip() if raw is not None else ""
+
+            if not user_input:
+                # empty or failed transcription
+                print("Sorry I didn't catch that. Please try again.")
+                continue
 
             if user_input.lower() == "exit":
                 print("\nRoha: Goodbye!")
@@ -85,24 +147,28 @@ def main():
 
             # Add user's message to conversation and memory
             messages.append({"role": "user", "content": user_input})
-            if not user_input.strip():
-                print("Sorry I didn't catch that. Please try again.")
-                continue
             memory_manager.add_message("user", user_input)
 
             # Send trimmed history to the model to avoid token limits
-            to_send = trimmed_messages(messages, history_limit=12)
+            to_send = trimmed_messages(messages, history_limit=HISTORY_LIMIT)
 
             try:
-                assistant_reply = chat_with_roha(to_send)
-            except Exception as e:
-                import traceback
-                traceback.print_exc()
-                assistant_reply = "I'm having trouble connecting to the model right now. Please try again later."
+                try:
+                    assistant_reply = _call_model_with_timeout(to_send, timeout=int(os.getenv("MODEL_TIMEOUT", "30")))
+                except Exception as e:
+                    logging.exception("Model call failed")
+                    assistant_reply = "I'm having trouble connecting to the model right now. Please try again later."
+
+            except Exception:
+                logging.exception("Unexpected model error")
+                assistant_reply = "Sorry, something went wrong while generating a response."
 
             # Save Roha's reply
             messages.append({"role": "assistant", "content": assistant_reply})
-            memory_manager.add_message("assistant", assistant_reply)
+            try:
+                memory_manager.add_message("assistant", assistant_reply)
+            except Exception:
+                logging.exception("Failed to persist assistant message")
 
             print("\nRoha:", assistant_reply)
             print()
@@ -114,19 +180,22 @@ def main():
                     logging.info("TTS status after enqueue: %s", tts.status())
                 else:
                     logging.debug("TTS not enabled for this session")
-            except Exception as e:
-                logging.warning("TTS speak failed: %s", e)
+            except Exception:
+                logging.exception("TTS speak failed")
 
     except KeyboardInterrupt:
         print("\nExiting...")
     finally:
-        memory_manager.close()
+        try:
+            memory_manager.close()
+        except Exception:
+            logging.exception("Error closing memory manager")
         try:
             if 'tts' in locals() and tts:
                 tts.shutdown()
                 logging.info("TTS shut down")
         except Exception:
-            logging.debug("Error shutting down TTS")
+            logging.exception("Error shutting down TTS")
 
 
 if __name__ == "__main__":

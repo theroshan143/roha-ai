@@ -1,5 +1,6 @@
 import sqlite3
 import atexit
+import logging
 from typing import List, Optional, Tuple, Any
 from types import TracebackType
 
@@ -39,19 +40,23 @@ class MemoryManager:
             )
             self.conn.commit()
         except Exception:
-            # on write failure, don't crash the whole app
-            self.conn.rollback()
+            # on write failure, log and rollback but do not crash the whole app
+            logging.exception("Failed to persist memory message (role=%s)", role)
+            try:
+                self.conn.rollback()
+            except Exception:
+                pass
 
     def get_memories(self, limit: Optional[int] = None) -> List[str]:
-        if limit:
+        if limit is not None and limit > 0:
             self.cursor.execute(
-                "SELECT content FROM messages ORDER BY timestamp DESC LIMIT ?", (limit,)
+                "SELECT content FROM messages ORDER BY id DESC LIMIT ?", (limit,)
             )
             rows: List[Tuple[Any, ...]] = self.cursor.fetchall()
             # return oldest->newest order
             return [r[0] for r in reversed(rows)]
 
-        self.cursor.execute("SELECT content FROM messages ORDER BY timestamp ASC")
+        self.cursor.execute("SELECT content FROM messages ORDER BY id ASC")
         rows2: List[Tuple[Any, ...]] = self.cursor.fetchall()
         return [row[0] for row in rows2]
 
@@ -72,7 +77,7 @@ class MemoryManager:
             # fetch oldest messages to summarize
             to_summarize = total - keep_last
             self.cursor.execute(
-                "SELECT id, role, content FROM messages ORDER BY timestamp ASC LIMIT ?",
+                "SELECT id, role, content FROM messages ORDER BY id ASC LIMIT ?",
                 (to_summarize,),
             )
             rows: List[Tuple[Any, ...]] = self.cursor.fetchall()
@@ -81,12 +86,12 @@ class MemoryManager:
 
             # naive summary: join contents
             combined = " \n".join([f"{r[1]}: {r[2]}" for r in rows])
-            summary_text = f"[Summarized {len(rows)} messages]\n" + (combined[:2000] + "..." if len(combined) > 2000 else combined)
+            summary_text = f"[Summarized {len(rows)} messages]\n" + (combined[:4000] + "..." if len(combined) > 4000 else combined)
 
-            # delete summarized rows
-            ids: List[str] = [str(r[0]) for r in rows]
-            q = f"DELETE FROM messages WHERE id IN ({', '.join(ids)})"
-            self.cursor.execute(q)
+            # delete summarized rows using parameterized query
+            ids: List[int] = [r[0] for r in rows]
+            placeholders = ",".join(["?" for _ in ids])
+            self.cursor.execute(f"DELETE FROM messages WHERE id IN ({placeholders})", tuple(ids))
 
             # store summary as a memory entry
             self.cursor.execute(
@@ -94,6 +99,7 @@ class MemoryManager:
             )
             self.conn.commit()
         except Exception:
+            logging.exception("Failed to summarize memory")
             try:
                 self.conn.rollback()
             except Exception:
@@ -104,7 +110,7 @@ class MemoryManager:
             if hasattr(self, "conn") and self.conn:
                 self.conn.close()
         except Exception:
-            pass
+            logging.exception("Error closing memory DB")
 
     # context manager support
     def __enter__(self) -> "MemoryManager":
