@@ -19,12 +19,14 @@ def chat_with_roha(messages: Sequence[Message]) -> str:
             response = chat(model=MODEL, messages=messages)
             latency = time.time() - start
             logging.info("Model call latency: %.2fs (attempt %d)", latency, attempt)
-            if not isinstance(response, dict):
-                raise RuntimeError("Invalid model response type")
-            msg = response.get("message") or {}
-            content = msg.get("content")
+            msg = getattr(response, "message", None)
+            if msg is None and isinstance(response, dict):
+                msg = response.get("message")
+            content = getattr(msg, "content", None) if msg is not None else None
+            if content is None and isinstance(msg, dict):
+                content = msg.get("content")
             if not isinstance(content, str):
-                raise RuntimeError("Model returned non-string content")
+                raise RuntimeError(f"Model returned unexpected response type: {type(response).__name__}")
             return content.strip()
         except Exception as e:
             last_exc = e

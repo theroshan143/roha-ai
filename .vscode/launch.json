@@ -2,6 +2,26 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Run Roha (Web App)",
+      "type": "python",
+      "request": "launch",
+      "module": "app.main",
+      "args": ["--mode", "web"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}\\.env"
+    },
+    {
+      "name": "Run Roha (Wake Mode)",
+      "type": "python",
+      "request": "launch",
+      "module": "app.main",
+      "args": ["--mode", "wake"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}\\.env"
+    },
+    {
       "name": "Run Roha",
       "type": "python",
       "request": "launch",

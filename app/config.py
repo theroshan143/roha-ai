@@ -1,11 +1,38 @@
 import os
+from pathlib import Path
+
 try:
-	from dotenv import load_dotenv
-	# Load .env if present (developer can create a .env file)
-	load_dotenv()
+    from dotenv import load_dotenv
+    # Load .env if present (developer can create a .env file)
+    load_dotenv()
 except Exception:
-	# dotenv is optional in some environments (e.g., CI/test)
-	pass
+    # dotenv is optional in some environments (e.g., CI/test)
+    pass
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Core directories (can be overridden via env)
+DATA_DIR = Path(os.getenv("DATA_DIR", str(BASE_DIR / "data")))
+LOGS_DIR = Path(os.getenv("LOGS_DIR", str(BASE_DIR / "logs")))
+PROMPTS_DIR = Path(os.getenv("PROMPTS_DIR", str(BASE_DIR / "prompts")))
+
+# ensure directories exist
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+PROMPTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Model selection via environment variable for safety and flexibility
 MODEL = os.getenv("MODEL", "qwen2.5:3b-instruct")
+
+# Paths
+DB_PATH = os.getenv("DB_PATH", str(DATA_DIR / "roha.db"))
+LOG_PATH = os.getenv("LOG_PATH", str(LOGS_DIR / "roha.log"))
+PROMPT_PATH = os.getenv("PROMPT_PATH", str(PROMPTS_DIR / "system_prompt.txt"))
+
+# Conversation / memory settings
+HISTORY_LIMIT = int(os.getenv("HISTORY_LIMIT", "12"))
+
+# Speech / audio settings
+WHISPER_MODEL = os.getenv("WHISPER_MODEL", "base")
+VOICE_ENABLED = os.getenv("VOICE_ENABLED", "false").lower() in ("1", "true", "yes")
+VOICE_STYLE = os.getenv("VOICE_STYLE", "casual").strip()
