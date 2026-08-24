@@ -12,258 +12,397 @@ from urllib.parse import urlparse
 from app.assistant_session import RohaSession
 from app.microphone import record_wake_audio
 from app.stt import transcribe_audio
-from app.wake_detector import WAKE_WORDS, wait_for_wake_word
-
+from app.wake_detector import wait_for_wake_word
 
 INDEX_HTML = """<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Roha</title>
+  <title>Roha — Personal AI Agent</title>
   <style>
     :root {
-      --bg: #f4efe6;
-      --panel: rgba(255, 255, 255, 0.78);
-      --panel-strong: #fffaf2;
-      --ink: #1d1f23;
-      --muted: #5f6671;
-      --accent: #1f7a6b;
-      --accent-2: #c85c3d;
-      --border: rgba(29, 31, 35, 0.1);
-      --shadow: 0 24px 70px rgba(44, 38, 21, 0.16);
+      --bg-gradient: radial-gradient(circle at 15% 15%, #1e1b4b 0%, #0f172a 40%, #090d16 100%);
+      --panel-bg: rgba(15, 23, 42, 0.72);
+      --panel-solid: #0f172a;
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-cyan: #38bdf8;
+      --accent-purple: #a855f7;
+      --accent-emerald: #10b981;
+      --user-bg: #1e293b;
+      --roha-bg: #111827;
+      --shadow-glow: 0 20px 50px rgba(0, 0, 0, 0.6);
     }
 
     * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
-      color: var(--ink);
-      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
-      background:
-        radial-gradient(circle at top left, rgba(31, 122, 107, 0.18), transparent 35%),
-        radial-gradient(circle at right top, rgba(200, 92, 61, 0.14), transparent 28%),
-        linear-gradient(135deg, #f8f2e8 0%, #efe7d8 48%, #e9ded0 100%);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-gradient);
+      overflow-x: hidden;
     }
 
-    .shell {
-      max-width: 1180px;
+    .container {
+      max-width: 1280px;
       margin: 0 auto;
-      padding: 24px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
 
-    .hero {
+    header {
       display: flex;
       justify-content: space-between;
-      gap: 20px;
-      align-items: end;
-      padding: 24px 0 18px;
+      align-items: center;
+      padding: 12px 20px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-glow);
     }
 
-    .brand h1 {
-      margin: 0;
-      font-size: clamp(2.5rem, 6vw, 4.6rem);
-      line-height: 0.95;
-      letter-spacing: -0.04em;
-      font-family: Georgia, "Times New Roman", serif;
-    }
-
-    .brand p {
-      max-width: 60ch;
-      margin: 12px 0 0;
-      color: var(--muted);
-      font-size: 1rem;
-    }
-
-    .status-pill {
-      min-width: 230px;
-      padding: 14px 16px;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.65);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-    }
-
-    .status-pill .label { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.12em; }
-    .status-pill .value { margin-top: 6px; font-size: 1.05rem; font-weight: 700; }
-    .layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.8fr);
-      gap: 20px;
-      align-items: start;
-    }
-
-    .panel {
-      background: var(--panel);
-      backdrop-filter: blur(14px);
-      border: 1px solid var(--border);
-      border-radius: 26px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-
-    .chat-panel { min-height: 72vh; display: flex; flex-direction: column; }
-    .chat-log {
-      flex: 1;
-      padding: 18px;
-      overflow-y: auto;
-      display: grid;
+    .brand {
+      display: flex;
+      align-items: center;
       gap: 14px;
     }
 
-    .bubble {
-      max-width: min(82%, 720px);
-      padding: 14px 16px;
-      border-radius: 18px;
-      line-height: 1.5;
-      white-space: pre-wrap;
-      word-break: break-word;
-      border: 1px solid rgba(29, 31, 35, 0.08);
-      animation: rise 180ms ease-out;
+    .logo-orb {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.2rem;
+      color: white;
     }
 
-    .bubble.user { margin-left: auto; background: #1d1f23; color: #f7f5ef; border-bottom-right-radius: 6px; }
-    .bubble.roha { margin-right: auto; background: #fffaf1; border-bottom-left-radius: 6px; }
-    .bubble.meta { margin: 0 auto; background: rgba(31, 122, 107, 0.08); color: var(--accent); font-size: 0.92rem; }
+    .brand-text h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(to right, #38bdf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      margin: 2px 0 0;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .header-badges {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--panel-border);
+    }
+
+    .badge-verified { background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
+    .badge-guest { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3); }
+    .badge-status { background: rgba(56, 189, 248, 0.12); color: var(--accent-cyan); }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 16px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .chat-panel {
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--panel-border);
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-glow);
+      overflow: hidden;
+    }
+
+    .chat-log {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .bubble {
+      max-width: 80%;
+      padding: 14px 18px;
+      border-radius: 20px;
+      line-height: 1.6;
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      animation: fadeIn 200ms ease-out;
+      border: 1px solid var(--panel-border);
+    }
+
+    .bubble.user {
+      align-self: flex-end;
+      background: var(--user-bg);
+      color: #f8fafc;
+      border-bottom-right-radius: 4px;
+    }
+
+    .bubble.roha {
+      align-self: flex-start;
+      background: var(--roha-bg);
+      color: #f1f5f9;
+      border-bottom-left-radius: 4px;
+      border-left: 3px solid var(--accent-cyan);
+    }
+
+    .bubble.meta {
+      align-self: center;
+      background: rgba(56, 189, 248, 0.1);
+      color: var(--accent-cyan);
+      font-size: 0.85rem;
+      border: 1px dashed rgba(56, 189, 248, 0.3);
+    }
 
     .composer {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 12px;
       padding: 16px;
-      border-top: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.5);
+      background: rgba(15, 23, 42, 0.85);
+      border-top: 1px solid var(--panel-border);
+      display: flex;
+      gap: 10px;
+      align-items: center;
     }
 
     .composer input {
-      width: 100%;
-      border: 1px solid rgba(29, 31, 35, 0.12);
+      flex: 1;
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid var(--panel-border);
       border-radius: 16px;
-      padding: 14px 16px;
-      font: inherit;
+      padding: 14px 18px;
+      color: white;
+      font-size: 0.95rem;
       outline: none;
-      background: rgba(255, 255, 255, 0.92);
+      transition: border-color 150ms;
     }
 
-    .composer button, .controls button {
-      border: 0;
+    .composer input:focus {
+      border-color: var(--accent-cyan);
+    }
+
+    .btn {
+      padding: 12px 20px;
       border-radius: 16px;
-      padding: 14px 16px;
-      font: inherit;
       font-weight: 700;
+      font-size: 0.9rem;
+      border: none;
       cursor: pointer;
-      transition: transform 140ms ease, opacity 140ms ease, background 140ms ease;
+      transition: all 150ms ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    .composer button { background: var(--accent); color: white; }
-    .controls button { width: 100%; margin-top: 10px; }
-    .primary { background: var(--accent); color: white; }
-    .secondary { background: #f2eadc; color: var(--ink); }
-    .danger { background: #b34a37; color: white; }
-    button:hover { transform: translateY(-1px); }
-    button:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .btn-primary { background: linear-gradient(135deg, #0284c7, #0369a1); color: white; }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4); }
 
-    .side {
-      display: grid;
-      gap: 20px;
+    .btn-accent { background: linear-gradient(135deg, var(--accent-purple), #7e22ce); color: white; }
+    .btn-accent:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4); }
+
+    .btn-secondary { background: #1e293b; color: var(--text-main); border: 1px solid var(--panel-border); }
+    .btn-secondary:hover { background: #334155; }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
     }
 
     .card {
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
       padding: 18px;
-      border-radius: 26px;
-      background: var(--panel-strong);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow-glow);
     }
 
-    .card h2 { margin: 0 0 10px; font-family: Georgia, "Times New Roman", serif; font-size: 1.5rem; }
-    .kv { display: grid; gap: 12px; }
-    .kv .row { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid rgba(29,31,35,0.08); padding-bottom: 10px; }
-    .kv .row:last-child { border-bottom: 0; padding-bottom: 0; }
-    .key { color: var(--muted); }
-    .value { font-weight: 700; text-align: right; }
-
-    .hint {
-      margin-top: 12px;
-      color: var(--muted);
-      font-size: 0.95rem;
-      line-height: 1.5;
+    .card h3 {
+      margin: 0 0 14px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    @keyframes rise {
-      from { transform: translateY(8px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+    .kv-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.88rem;
     }
 
-    @media (max-width: 920px) {
-      .hero, .layout { grid-template-columns: 1fr; display: grid; }
-      .status-pill { min-width: 0; }
-      .chat-panel { min-height: 62vh; }
+    .kv-row {
+      display: flex;
+      justify-content: space-between;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .kv-key { color: var(--text-muted); }
+    .kv-val { font-weight: 600; }
+
+    .tools-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .tool-chip {
+      padding: 8px 10px;
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #7dd3fc;
+      text-align: center;
+    }
+
+    .auth-box {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .auth-box input {
+      flex: 1;
+      background: #1e293b;
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 8px 12px;
+      color: white;
+      font-size: 0.88rem;
+      outline: none;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 900px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
     }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <section class="hero">
+  <div class="container">
+    <header>
       <div class="brand">
-        <h1>Roha</h1>
-        <p>A local browser console for chatting with Roha and starting the server-side wake-word listener. Keep the app open and Roha stays within reach.</p>
+        <div class="logo-orb">R</div>
+        <div class="brand-text">
+          <h1>Roha Agent</h1>
+          <p>Local Autonomous Assistant</p>
+        </div>
       </div>
-      <div class="status-pill">
-        <div class="label">Live State</div>
-        <div class="value" id="statusText">Idle</div>
+      <div class="header-badges">
+        <div class="badge badge-status" id="statusBadge">State: Idle</div>
+        <div class="badge badge-guest" id="authBadge">🔒 Guest Mode</div>
       </div>
-    </section>
+    </header>
 
-    <section class="layout">
-      <div class="panel chat-panel">
+    <div class="main-grid">
+      <div class="chat-panel">
         <div class="chat-log" id="chatLog"></div>
         <form class="composer" id="composer">
-          <input id="messageInput" autocomplete="off" placeholder="Ask Roha something or type 'exit'..." />
-          <button type="submit">Send</button>
+          <input id="messageInput" autocomplete="off" placeholder="Ask Roha anything or command tools..." />
+          <button type="button" class="btn btn-accent" id="micBtn" title="Hold/Click to speak">🎤 Voice</button>
+          <button type="submit" class="btn btn-primary">Send</button>
         </form>
       </div>
 
-      <div class="side">
+      <div class="sidebar">
         <div class="card">
-          <h2>Controls</h2>
-          <div class="controls">
-            <button class="primary" id="startWake">Start Wake Listening</button>
-            <button class="secondary" id="stopWake">Stop Wake Listening</button>
-            <button class="primary" id="startVoice">Start Voice Conversation</button>
-            <button class="secondary" id="stopVoice">Stop Voice Conversation</button>
-            <button class="secondary" id="resetChat">Reset Chat</button>
-            <button class="danger" id="refreshNow">Refresh State</button>
+          <h3>🔐 Creator Security</h3>
+          <div class="kv-list">
+            <div class="kv-row"><span class="kv-key">Security Status</span><span class="kv-val" id="secStatus">Guest</span></div>
+            <div class="kv-row"><span class="kv-key">Creator</span><span class="kv-val">Roshan Kumar</span></div>
           </div>
-          <div class="hint">Wake listening uses the machine microphone. Voice conversation uses the browser microphone and browser speech output for a fuller two-way flow.</div>
+          <div class="auth-box">
+            <input type="password" id="pinInput" placeholder="Enter Owner PIN (1430)..." />
+            <button class="btn btn-primary" id="authBtn">Unlock</button>
+          </div>
         </div>
 
         <div class="card">
-          <h2>Details</h2>
-          <div class="kv">
-            <div class="row"><div class="key">Wake word</div><div class="value">Roha</div></div>
-            <div class="row"><div class="key">Last heard</div><div class="value" id="lastHeard">-</div></div>
-            <div class="row"><div class="key">Last reply</div><div class="value" id="lastReply">-</div></div>
-            <div class="row"><div class="key">Model</div><div class="value" id="modelState">-</div></div>
+          <h3>🛠️ Active Agent Tools</h3>
+          <div class="tools-grid" id="toolsGrid">
+            <div class="tool-chip">calculator</div>
+            <div class="tool-chip">system_info</div>
+            <div class="tool-chip">read_file</div>
+            <div class="tool-chip">list_directory</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>⚙️ System Details</h3>
+          <div class="kv-list">
+            <div class="kv-row"><span class="kv-key">Model</span><span class="kv-val" id="modelVal">-</span></div>
+            <div class="kv-row"><span class="kv-key">ReAct Steps</span><span class="kv-val">Max 5</span></div>
+            <div class="kv-row"><span class="kv-key">Memory</span><span class="kv-val">SQLite + RAG</span></div>
+          </div>
+          <div style="margin-top: 14px; display: flex; gap: 8px;">
+            <button class="btn btn-secondary" style="flex:1" id="resetBtn">Reset Session</button>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   </div>
 
   <script>
     const chatLog = document.getElementById('chatLog');
-    const statusText = document.getElementById('statusText');
-    const lastHeard = document.getElementById('lastHeard');
-    const lastReply = document.getElementById('lastReply');
-    const modelState = document.getElementById('modelState');
+    const statusBadge = document.getElementById('statusBadge');
+    const authBadge = document.getElementById('authBadge');
+    const secStatus = document.getElementById('secStatus');
+    const modelVal = document.getElementById('modelVal');
     const composer = document.getElementById('composer');
     const messageInput = document.getElementById('messageInput');
-    const startVoiceButton = document.getElementById('startVoice');
-    const stopVoiceButton = document.getElementById('stopVoice');
+    const pinInput = document.getElementById('pinInput');
+    const authBtn = document.getElementById('authBtn');
+    const micBtn = document.getElementById('micBtn');
+    const resetBtn = document.getElementById('resetBtn');
 
-    let voiceConversationActive = false;
-    let currentRecordingStop = null;
+    let recording = false;
+    let mediaRecorder = null;
+    let audioChunks = [];
 
     function addBubble(role, text) {
       const bubble = document.createElement('div');
@@ -275,255 +414,123 @@ INDEX_HTML = """<!doctype html>
 
     function renderMessages(messages) {
       chatLog.innerHTML = '';
-      messages.forEach((message) => {
-        if (message.role === 'system') {
-          return;
-        }
-        addBubble(message.role === 'assistant' ? 'roha' : 'user', message.content || '');
+      messages.forEach((msg) => {
+        if (msg.role === 'system') return;
+        addBubble(msg.role === 'assistant' ? 'roha' : 'user', msg.content || '');
       });
       if (!chatLog.children.length) {
-        addBubble('meta', 'Roha is waiting. Start wake listening or type a message.');
+        addBubble('meta', '👋 Welcome to Roha Agent Console! Type a prompt or use Voice to begin.');
       }
-    }
-
-    function setStatus(text) {
-      statusText.textContent = text;
-    }
-
-    function speakInBrowser(text) {
-      if (!text || !('speechSynthesis' in window)) {
-        return Promise.resolve();
-      }
-      return new Promise((resolve) => {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-        utterance.onend = () => resolve();
-        utterance.onerror = () => resolve();
-        window.speechSynthesis.speak(utterance);
-      });
-    }
-
-    async function recordUtterance(durationMs = 5000) {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Microphone access is not supported in this browser');
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const chunks = [];
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
-      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-      let stopped = false;
-
-      const cleanup = async () => {
-        try { stream.getTracks().forEach((track) => track.stop()); } catch (error) { console.warn(error); }
-      };
-
-      const finish = async () => {
-        if (stopped) return null;
-        stopped = true;
-        currentRecordingStop = null;
-        await cleanup();
-        return new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
-      };
-
-      currentRecordingStop = async () => {
-        try {
-          recorder.stop();
-        } catch (error) {
-          console.warn('Stopping recorder failed', error);
-        }
-      };
-
-      recorder.ondataavailable = (event) => {
-        if (event.data && event.data.size > 0) {
-          chunks.push(event.data);
-        }
-      };
-
-      const recorded = new Promise((resolve, reject) => {
-        recorder.onerror = (event) => reject(event.error || new Error('Recorder error'));
-        recorder.onstop = async () => {
-          try {
-            const blob = await finish();
-            resolve(blob);
-          } catch (error) {
-            reject(error);
-          }
-        };
-      });
-
-      setStatus('Recording');
-      recorder.start();
-      const timeoutId = window.setTimeout(() => {
-        try {
-          recorder.stop();
-        } catch (error) {
-          console.warn('Auto-stop recorder failed', error);
-        }
-        window.clearTimeout(timeoutId);
-      }, durationMs);
-
-      return recorded;
-    }
-
-    async function postVoiceAudio(blob) {
-      const response = await fetch('/api/voice/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': blob.type || 'audio/webm' },
-        body: blob,
-      });
-      if (!response.ok) {
-        throw new Error(`Request failed: ${response.status}`);
-      }
-      return await response.json();
-    }
-
-    async function sendMessage(message, speak = false) {
-      const result = await api('/api/chat', { message, speak });
-      addBubble('roha', result.reply);
-      lastReply.textContent = result.reply || '-';
-      if (speak) {
-        speakInBrowser(result.reply);
-      }
-      return result.reply;
-    }
-
-    function stopVoiceConversation() {
-      voiceConversationActive = false;
-      if (currentRecordingStop) {
-        try {
-          currentRecordingStop();
-        } catch (error) {
-          console.warn('Stopping recording failed', error);
-        }
-      }
-      setStatus('Voice conversation stopped');
-    }
-
-    function startVoiceConversation() {
-      voiceConversationActive = true;
-      setStatus('Requesting microphone');
-      runVoiceConversation().catch((error) => {
-        console.error('Voice conversation failed to start', error);
-        setStatus('Voice conversation failed');
-      });
-    }
-
-    async function runVoiceConversation() {
-      while (voiceConversationActive) {
-        try {
-          setStatus('Listening');
-          const blob = await recordUtterance(7000);
-          if (!voiceConversationActive) {
-            break;
-          }
-
-          setStatus('Thinking');
-          const result = await postVoiceAudio(blob);
-          const transcript = (result.transcript || '').trim();
-          const reply = (result.reply || '').trim();
-
-          if (transcript) {
-            lastHeard.textContent = transcript;
-            addBubble('user', transcript);
-          }
-
-          if (reply) {
-            lastReply.textContent = reply;
-            addBubble('roha', reply);
-            await speakInBrowser(reply);
-          }
-
-          setStatus('Listening');
-        } catch (error) {
-          console.error('Voice conversation failed', error);
-          setStatus('Voice conversation failed');
-          break;
-        }
-      }
-
-      voiceConversationActive = false;
-      setStatus('Voice conversation stopped');
     }
 
     async function api(path, body) {
-      try {
-        const response = await fetch(path, {
-          method: body ? 'POST' : 'GET',
-          headers: body ? { 'Content-Type': 'application/json' } : {},
-          body: body ? JSON.stringify(body) : undefined,
-        });
-        if (!response.ok) {
-          throw new Error(`Request failed: ${response.status}`);
-        }
-        return await response.json();
-      } catch (error) {
-        setStatus('Backend unavailable');
-        throw error;
-      }
+      const res = await fetch(path, {
+        method: body ? 'POST' : 'GET',
+        headers: body ? { 'Content-Type': 'application/json' } : {},
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      return await res.json();
     }
 
     async function refreshState() {
       try {
         const state = await api('/api/state');
-        if (!voiceConversationActive) {
-          setStatus(state.status_text);
+        statusBadge.textContent = `State: ${state.status_text || 'Idle'}`;
+        modelVal.textContent = state.model || 'qwen2.5:3b-instruct';
+        
+        if (state.is_verified) {
+          authBadge.className = 'badge badge-verified';
+          authBadge.textContent = '🔓 Verified Creator';
+          secStatus.textContent = 'Verified (Roshan Kumar)';
+        } else {
+          authBadge.className = 'badge badge-guest';
+          authBadge.textContent = '🔒 Guest Mode';
+          secStatus.textContent = 'Guest / Restricted';
         }
-        lastHeard.textContent = state.last_heard || '-';
-        lastReply.textContent = state.last_assistant || '-';
-        modelState.textContent = state.model || '-';
+
         renderMessages(state.messages || []);
-      } catch (error) {
-        console.warn('Refresh failed', error);
+      } catch (err) {
+        console.warn('Failed to refresh state', err);
       }
     }
 
-    composer.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const message = messageInput.value.trim();
-      if (!message) return;
+    composer.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = messageInput.value.trim();
+      if (!msg) return;
       messageInput.value = '';
-      addBubble('user', message);
+      addBubble('user', msg);
+      statusBadge.textContent = 'State: Thinking...';
+
       try {
-        await sendMessage(message, false);
+        const res = await api('/api/chat', { message: msg });
+        addBubble('roha', res.reply || '');
         await refreshState();
-      } catch (error) {
-        console.error(error);
+      } catch (err) {
+        addBubble('meta', 'Error sending message to Roha backend.');
       }
     });
 
-    document.getElementById('startWake').addEventListener('click', async () => {
-      await api('/api/wake/start', {});
+    authBtn.addEventListener('click', async () => {
+      const pin = pinInput.value.trim();
+      if (!pin) return;
+      const res = await api('/api/auth', { pin });
+      if (res.ok) {
+        pinInput.value = '';
+        alert('🔓 Creator Verified successfully!');
+      } else {
+        alert('❌ Invalid Owner PIN!');
+      }
       await refreshState();
     });
 
-    document.getElementById('stopWake').addEventListener('click', async () => {
-      await api('/api/wake/stop', {});
-      await refreshState();
-    });
-
-    startVoiceButton.addEventListener('click', async () => {
-      startVoiceConversation();
-      await new Promise((resolve) => window.setTimeout(resolve, 250));
-      await refreshState();
-    });
-
-    stopVoiceButton.addEventListener('click', async () => {
-      stopVoiceConversation();
-      await refreshState();
-    });
-
-    document.getElementById('resetChat').addEventListener('click', async () => {
+    resetBtn.addEventListener('click', async () => {
       await api('/api/reset', {});
       await refreshState();
     });
 
-    document.getElementById('refreshNow').addEventListener('click', refreshState);
+    micBtn.addEventListener('click', async () => {
+      if (!recording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioChunks = [];
+          mediaRecorder = new MediaRecorder(stream);
+          mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+          mediaRecorder.onstop = async () => {
+            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+            statusBadge.textContent = 'State: Transcribing voice...';
+            try {
+              const res = await fetch('/api/voice/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'audio/webm' },
+                body: blob,
+              });
+              const data = await res.json();
+              if (data.transcript) addBubble('user', data.transcript);
+              if (data.reply) addBubble('roha', data.reply);
+              await refreshState();
+            } catch (err) {
+              addBubble('meta', 'Voice transcription failed.');
+            }
+          };
+          mediaRecorder.start();
+          recording = true;
+          micBtn.textContent = '🛑 Stop Mic';
+          micBtn.style.background = '#ef4444';
+          statusBadge.textContent = 'State: Recording mic...';
+        } catch (err) {
+          alert('Microphone access denied or unsupported.');
+        }
+      } else {
+        mediaRecorder.stop();
+        recording = false;
+        micBtn.textContent = '🎤 Voice';
+        micBtn.style.background = '';
+      }
+    });
 
-    setInterval(refreshState, 2000);
     refreshState();
+    setInterval(refreshState, 3000);
   </script>
 </body>
 </html>
@@ -572,32 +579,33 @@ class RohaWebHandler(BaseHTTPRequestHandler):
         logging.info("%s - %s", self.address_string(), format % args)
 
     def do_GET(self):
-      parsed = urlparse(self.path)
+        parsed = urlparse(self.path)
 
-      if parsed.path == "/":
-        body = INDEX_HTML.encode("utf-8")
-        self.send_response(200)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-store")
-        self.end_headers()
-        self.wfile.write(body)
-        return
+        if parsed.path == "/":
+            body = INDEX_HTML.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+            return
 
-      if parsed.path == "/api/state":
-        state = self._state()
-        payload = {
-          "status_text": state.status_text,
-          "last_heard": state.last_heard,
-          "last_assistant": state.last_assistant,
-          "last_error": state.last_error,
-          "model": os.getenv("MODEL", "qwen2.5:3b-instruct"),
-          "messages": state.session.snapshot_messages(),
-        }
-        self._send_json(payload)
-        return
+        if parsed.path == "/api/state":
+            state = self._state()
+            payload = {
+                "status_text": state.status_text,
+                "last_heard": state.last_heard,
+                "last_assistant": state.last_assistant,
+                "last_error": state.last_error,
+                "is_verified": state.session.is_verified,
+                "model": os.getenv("MODEL", "qwen2.5:3b-instruct"),
+                "messages": state.session.snapshot_messages(),
+            }
+            self._send_json(payload)
+            return
 
-      self._send_json({"error": "Not found"}, status=404)
+        self._send_json({"error": "Not found"}, status=404)
 
     def do_POST(self):
         state = self._state()
@@ -610,45 +618,52 @@ class RohaWebHandler(BaseHTTPRequestHandler):
             with state.lock:
                 state.last_heard = message
                 state.last_assistant = reply
-                state.status_text = "Chat replied"
+                state.status_text = "Idle"
                 state.last_error = ""
             self._send_json({"reply": reply})
             return
 
+        if self.path == "/api/auth":
+            payload = self._read_json()
+            pin = str(payload.get("pin") or "")
+            ok = state.session.authenticate(pin)
+            self._send_json({"ok": ok})
+            return
+
         if self.path == "/api/voice/chat":
-          length = int(self.headers.get("Content-Length") or 0)
-          audio_bytes = self.rfile.read(length) if length > 0 else b""
-          transcript = ""
-          reply = ""
-          audio_path = None
-          try:
-            content_type = (self.headers.get("Content-Type") or "").lower()
-            suffix = ".webm" if "webm" in content_type else ".wav"
-            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
-              temp_file.write(audio_bytes)
-              audio_path = temp_file.name
+            length = int(self.headers.get("Content-Length") or 0)
+            audio_bytes = self.rfile.read(length) if length > 0 else b""
+            transcript = ""
+            reply = ""
+            audio_path = None
+            try:
+                content_type = (self.headers.get("Content-Type") or "").lower()
+                suffix = ".webm" if "webm" in content_type else ".wav"
+                with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
+                    temp_file.write(audio_bytes)
+                    audio_path = temp_file.name
 
-            transcript = transcribe_audio(audio_path).strip()
-            reply = state.session.process_user_input(transcript, speak=False) if transcript else ""
-          finally:
-            if audio_path:
-              try:
-                os.unlink(audio_path)
-              except Exception:
-                logging.debug("Failed to clean up temporary voice file", exc_info=True)
+                transcript = transcribe_audio(audio_path).strip()
+                reply = state.session.process_user_input(transcript, speak=False) if transcript else ""
+            finally:
+                if audio_path:
+                    try:
+                        os.unlink(audio_path)
+                    except Exception:
+                        logging.debug("Failed to clean up temporary voice file", exc_info=True)
 
-          with state.lock:
-            state.last_heard = transcript
-            state.last_assistant = reply if transcript else ""
-            state.status_text = "Voice replied" if transcript else "Listening for wake word"
-            state.last_error = ""
-          self._send_json({"transcript": transcript, "reply": reply})
-          return
+            with state.lock:
+                state.last_heard = transcript
+                state.last_assistant = reply if transcript else ""
+                state.status_text = "Idle"
+                state.last_error = ""
+            self._send_json({"transcript": transcript, "reply": reply})
+            return
 
         if self.path == "/api/reset":
             state.session.reset()
             with state.lock:
-                state.status_text = "Chat reset"
+                state.status_text = "Idle"
                 state.last_heard = ""
                 state.last_assistant = ""
                 state.last_error = ""
@@ -764,8 +779,12 @@ def run_web_app(session: Optional[RohaSession] = None, host: str = "127.0.0.1", 
         logging.warning("Failed to open browser automatically")
 
     try:
-        print(f"Roha web app running at {url}")
-        print("Press Ctrl+C to stop the web server.")
+        print("=" * 60)
+        print(f" 🚀 ROHA AGENT VISUAL CONSOLE READY")
+        print(f" 🌐 Running on: {url}")
+        print(" Opening in your default web browser...")
+        print(" Press Ctrl+C in terminal to stop the web server.")
+        print("=" * 60)
         server.serve_forever()
     except KeyboardInterrupt:
         print("\nStopping web server...")

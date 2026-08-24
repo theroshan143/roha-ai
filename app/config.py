@@ -36,3 +36,8 @@ HISTORY_LIMIT = int(os.getenv("HISTORY_LIMIT", "12"))
 WHISPER_MODEL = os.getenv("WHISPER_MODEL", "base")
 VOICE_ENABLED = os.getenv("VOICE_ENABLED", "false").lower() in ("1", "true", "yes")
 VOICE_STYLE = os.getenv("VOICE_STYLE", "casual").strip()
+
+# Owner Security & Creator Verification Settings
+OWNER_NAME = os.getenv("ROHA_OWNER_NAME", "Roshan Kumar")
+OWNER_PIN = os.getenv("ROHA_OWNER_PIN", "1430")
+AUTO_VERIFY_LOCAL_OS = os.getenv("ROHA_AUTO_VERIFY_OS", "true").lower() in ("1", "true", "yes")

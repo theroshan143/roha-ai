@@ -1,0 +1,21 @@
+# Python virtual environment & bytecode
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Databases, logs, and temp recordings
+data/*.db
+logs/*.log
+recordings/*.wav
+recordings/*.webm
+
+# Environment variables
+.env
+
+# IDE & OS configuration
+.vscode/
+.idea/
+.DS_Store
+tree.txt

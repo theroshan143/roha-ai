@@ -8,7 +8,8 @@ faster-whisper
 sounddevice
 numpy
 scipy
-# Lightweight fuzzy matching for relevance
+keyboard
 rapidfuzz
 # Testing
 pytest
+

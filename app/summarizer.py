@@ -27,7 +27,8 @@ def summarize_texts(texts: List[str], max_chars: int = 3000) -> str:
     ]
 
     try:
-        summary = chat_with_roha(messages)
+        res = chat_with_roha(messages)
+        summary = res.get("content", "") if isinstance(res, dict) else str(res)
         if summary:
             return summary.strip()
     except Exception:

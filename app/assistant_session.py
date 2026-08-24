@@ -1,16 +1,21 @@
 import concurrent.futures
+import json
 import logging
 import os
 import threading
-import time
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from app.chat import chat_with_roha
-from app.config import DB_PATH, HISTORY_LIMIT
+from app.config import DB_PATH, HISTORY_LIMIT, OWNER_NAME, OWNER_PIN, AUTO_VERIFY_LOCAL_OS
 from app.memory import MemoryManager
 from app.prompts import load_system_prompt
 from app.tts import create_default_tts
 from app.types import Message
+from tools.builtin import CalculatorTool, ReadFileTool, SystemInfoTool, ListDirectoryTool
+from tools.registry import ToolRegistry
+
+# Shared persistent thread pool for model execution timeouts
+_MODEL_EXECUTOR = concurrent.futures.ThreadPoolExecutor(max_workers=4)
 
 
 def trimmed_messages(messages: List[Message], history_limit: int = HISTORY_LIMIT) -> List[Message]:
@@ -23,31 +28,57 @@ def trimmed_messages(messages: List[Message], history_limit: int = HISTORY_LIMIT
     return trimmed
 
 
-def _call_model_with_timeout(messages, timeout: int = 30) -> str:
-    """Call the chat model with a timeout without blocking shutdown of the worker thread."""
-    executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-    fut = executor.submit(chat_with_roha, messages)
+def _call_model_with_timeout(messages: List[Message], tools: Optional[List[Dict[str, Any]]] = None, timeout: int = 30) -> Dict[str, Any]:
+    """Call the chat model with timeout using a persistent thread pool."""
+    fut = _MODEL_EXECUTOR.submit(chat_with_roha, messages, tools)
     try:
-        return fut.result(timeout=timeout)
+        res = fut.result(timeout=timeout)
+        if isinstance(res, str):
+            return {"content": res, "tool_calls": []}
+        return res
     except concurrent.futures.TimeoutError:
         fut.cancel()
         raise TimeoutError("Model request timed out")
-    finally:
-        executor.shutdown(wait=False, cancel_futures=True)
 
 
 class RohaSession:
-    """Shared assistant runtime for terminal and web UI entrypoints."""
+    """Shared assistant agent runtime for terminal and web UI entrypoints."""
 
     def __init__(self):
         self.system_prompt = load_system_prompt()
-        self.messages: List[Message] = [{"role": "system", "content": self.system_prompt}]
         self.memory_manager = MemoryManager(DB_PATH)
-        from app.circuit_breaker import CircuitBreaker
+        
+        # Authentication state
+        self.is_verified: bool = AUTO_VERIFY_LOCAL_OS
 
+        # Hydrate session context from DB
+        recent_history = self.memory_manager.load_recent_history(limit=HISTORY_LIMIT)
+        self.messages: List[Message] = [{"role": "system", "content": self.system_prompt}] + recent_history
+
+        # Initialize Tool Registry
+        self.tool_registry = ToolRegistry()
+        self.tool_registry.register(CalculatorTool())
+        self.tool_registry.register(ReadFileTool())
+        self.tool_registry.register(SystemInfoTool())
+        self.tool_registry.register(ListDirectoryTool())
+
+        from app.circuit_breaker import CircuitBreaker
         self.cb = CircuitBreaker()
         self.tts = create_default_tts()
         self._lock = threading.Lock()
+
+    def authenticate(self, pin: str) -> bool:
+        """Authenticate creator with PIN."""
+        with self._lock:
+            if (pin or "").strip() == str(OWNER_PIN).strip():
+                self.is_verified = True
+                return True
+            return False
+
+    def lock_session(self) -> None:
+        """Lock session into guest mode."""
+        with self._lock:
+            self.is_verified = False
 
     def reset(self) -> None:
         with self._lock:
@@ -72,33 +103,102 @@ class RohaSession:
             self.messages.append({"role": "user", "content": normalized})
             self.memory_manager.add_message("user", normalized)
 
+            # RAG Memory context retrieval
+            relevant_snippets = self.memory_manager.get_relevant_memories(normalized, k=3)
+            
+            # Assemble model context
             to_send = trimmed_messages(self.messages, history_limit=HISTORY_LIMIT)
+            
+            # Inject Authentication Status System Note
+            auth_status = f"[AUTHENTICATION STATUS]: VERIFIED CREATOR ({OWNER_NAME}). Full permissions unlocked." if self.is_verified else "[AUTHENTICATION STATUS]: UNVERIFIED GUEST USER. Restrict personal files and personal information."
+            to_send.insert(1, {"role": "system", "content": auth_status})
+
+            if relevant_snippets and self.is_verified:
+                memory_context = "\n".join(relevant_snippets)
+                rag_note: Message = {
+                    "role": "system",
+                    "content": f"[Relevant Memories Retrieved]:\n{memory_context}",
+                }
+                to_send.insert(2, rag_note)
+
+            # Tool Gating: Guests get public tools only, Verified Creator gets all tools
+            if self.is_verified:
+                tools_schema = self.tool_registry.get_schemas()
+            else:
+                # Restrict read_file & list_directory for guest users
+                guest_tools = [CalculatorTool(), SystemInfoTool()]
+                tools_schema = [t.to_ollama_schema() for t in guest_tools]
+
+            timeout_val = int(os.getenv("MODEL_TIMEOUT", "30"))
+            max_steps = int(os.getenv("ROHA_MAX_STEPS", "5"))
+
 
             try:
                 if not self.cb.call_allowed():
                     wait_seconds = self.cb.time_until_reset()
-                    logging.warning(
-                        "Circuit breaker open; skipping model call for %d seconds",
-                        wait_seconds,
-                    )
-                    assistant_reply = (
-                        "The model is temporarily unavailable due to repeated errors. "
-                        "Please try again later."
-                    )
+                    logging.warning("Circuit breaker open; skipping call for %d seconds", wait_seconds)
+                    assistant_reply = "The model is temporarily unavailable due to repeated errors. Please try again later."
                 else:
                     try:
-                        assistant_reply = _call_model_with_timeout(
-                            to_send,
-                            timeout=int(os.getenv("MODEL_TIMEOUT", "30")),
-                        )
-                        self.cb.record_success()
+                        step = 0
+                        assistant_reply = ""
+                        scratchpad = list(to_send)
+
+                        while step < max_steps:
+                            step += 1
+                            logging.info("ReAct Loop Step %d/%d", step, max_steps)
+                            response_dict = _call_model_with_timeout(scratchpad, tools=tools_schema, timeout=timeout_val)
+                            self.cb.record_success()
+
+                            tool_calls = response_dict.get("tool_calls", [])
+                            content = response_dict.get("content", "")
+
+                            if not tool_calls:
+                                # Model produced final response without requesting further tools
+                                assistant_reply = content
+                                break
+
+                            # Model requested tool execution
+                            logging.info("[Step %d/%d] Executing %d tool calls requested by model", step, max_steps, len(tool_calls))
+                            scratchpad.append({
+                                "role": "assistant",
+                                "content": content or f"[Executing tools for step {step}...]",
+                            })
+
+                            observations = []
+                            for tool_call in tool_calls:
+                                fn = tool_call.get("function", {})
+                                name = fn.get("name", "")
+                                args = fn.get("arguments", {})
+
+                                if isinstance(args, str):
+                                    try:
+                                        args = json.loads(args)
+                                    except Exception:
+                                        args = {}
+
+                                result_str = self.tool_registry.execute(name, args)
+                                observations.append(f"Observation from tool '{name}':\n{result_str}")
+
+                            obs_text = "\n\n".join(observations)
+                            scratchpad.append({
+                                "role": "user",
+                                "content": f"[Tool Observations]:\n{obs_text}\n\nIf you have sufficient information to answer, provide your final response. Otherwise, call the next tool.",
+                            })
+
+                        # Fallback synthesis if max_steps reached without final text
+                        if not assistant_reply and step >= max_steps:
+                            logging.warning("ReAct loop reached MAX_STEPS (%d); forcing final synthesis.", max_steps)
+                            final_resp = _call_model_with_timeout(scratchpad, tools=None, timeout=timeout_val)
+                            assistant_reply = final_resp.get("content", "Completed task execution limit.")
+
+                        if not assistant_reply:
+                            assistant_reply = "I completed the requested operations."
+
                     except Exception:
-                        logging.exception("Model call failed")
+                        logging.exception("Model call failed during ReAct loop")
                         self.cb.record_failure()
-                        assistant_reply = (
-                            "I'm having trouble connecting to the model right now. "
-                            "Please try again later."
-                        )
+                        assistant_reply = "I'm having trouble connecting to the model right now. Please try again later."
             except Exception:
                 logging.exception("Unexpected model error")
                 assistant_reply = "Sorry, something went wrong while generating a response."
@@ -135,3 +235,4 @@ class RohaSession:
                 logging.info("TTS shut down")
         except Exception:
             logging.exception("Error shutting down TTS")
+
