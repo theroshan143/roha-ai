@@ -2,6 +2,7 @@ import logging
 import os
 import time
 from typing import Any, Dict, List, Optional, Sequence
+# pyrefly: ignore [missing-import]
 from ollama import chat
 from app.config import MODEL
 from app.types import Message
@@ -56,4 +57,4 @@ def chat_with_roha(
             time.sleep(delay)
             delay *= 2
 
-    raise RuntimeError(f"LLM call failed after {attempts} attempts: {last_exc}")
+    raise RuntimeError(f"LLM call failed after {attempts} attempts: {last_exc}")

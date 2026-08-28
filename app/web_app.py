@@ -19,132 +19,236 @@ INDEX_HTML = """<!doctype html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Roha — Personal AI Agent</title>
+  <title>ROHA // AI WORKSPACE</title>
   <style>
     :root {
-      --bg-gradient: radial-gradient(circle at 15% 15%, #1e1b4b 0%, #0f172a 40%, #090d16 100%);
-      --panel-bg: rgba(15, 23, 42, 0.72);
-      --panel-solid: #0f172a;
-      --panel-border: rgba(255, 255, 255, 0.08);
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent-cyan: #38bdf8;
-      --accent-purple: #a855f7;
-      --accent-emerald: #10b981;
-      --user-bg: #1e293b;
-      --roha-bg: #111827;
-      --shadow-glow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      --bg-main: #000000;
+      --bg-sidebar: #09090b;
+      --bg-card: #121214;
+      --bg-card-hover: #18181b;
+      --bg-input: #0c0c0e;
+      --border-subtle: #27272a;
+      --border-strong: #3f3f46;
+      --border-focus: #ffffff;
+      --text-main: #ffffff;
+      --text-muted: #a1a1aa;
+      --text-dim: #71717a;
+      --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      margin: 0;
-      min-height: 100vh;
+      background: var(--bg-main);
       color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg-gradient);
-      overflow-x: hidden;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.5;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
     }
 
-    .container {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 20px;
+    /* Left App Sidebar (Odysseus Workspace Nav) */
+    aside.workspace-sidebar {
+      width: 240px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-subtle);
       display: flex;
       flex-direction: column;
-      height: 100vh;
-    }
-
-    header {
-      display: flex;
       justify-content: space-between;
-      align-items: center;
-      padding: 12px 20px;
-      background: var(--panel-bg);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--panel-border);
-      border-radius: 20px;
-      margin-bottom: 16px;
-      box-shadow: var(--shadow-glow);
     }
 
-    .brand {
+    .brand-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 10px;
     }
 
-    .logo-orb {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-      box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+    .brand-logo {
+      width: 28px;
+      height: 28px;
+      background: #ffffff;
+      color: #000000;
+      font-family: var(--font-mono);
+      font-weight: 900;
+      font-size: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 900;
-      font-size: 1.2rem;
-      color: white;
+      border-radius: 4px;
     }
 
-    .brand-text h1 {
-      margin: 0;
-      font-size: 1.5rem;
+    .brand-title {
+      font-size: 14px;
       font-weight: 800;
-      letter-spacing: -0.02em;
-      background: linear-gradient(to right, #38bdf8, #c084fc);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
     }
 
-    .brand-text p {
-      margin: 2px 0 0;
-      font-size: 0.82rem;
+    .nav-section {
+      padding: 12px 8px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow-y: auto;
+    }
+
+    .nav-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      padding: 8px 8px 4px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 4px;
       color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 120ms ease;
     }
 
-    .header-badges {
+    .nav-item:hover {
+      background: var(--bg-card);
+      color: var(--text-main);
+    }
+
+    .nav-item.active {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border-color: var(--border-strong);
+    }
+
+    .nav-icon {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      width: 16px;
+      text-align: center;
+      color: var(--text-dim);
+    }
+
+    .nav-item.active .nav-icon {
+      color: var(--text-main);
+    }
+
+    .sidebar-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 11px;
+      color: var(--text-dim);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Main Center Workspace */
+    main.workspace-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-main);
+      min-width: 0;
+    }
+
+    /* Header Bar */
+    header.workspace-header {
+      height: 48px;
+      background: var(--bg-sidebar);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .header-left {
       display: flex;
       align-items: center;
       gap: 12px;
     }
 
-    .badge {
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 0.82rem;
-      font-weight: 600;
+    .header-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 2px 8px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 3px;
+      color: var(--text-muted);
+      background: var(--bg-card);
+    }
+
+    .header-badge.highlight {
+      border-color: var(--border-strong);
+      color: var(--text-main);
+    }
+
+    .header-right {
       display: flex;
       align-items: center;
-      gap: 6px;
-      border: 1px solid var(--panel-border);
+      gap: 8px;
     }
 
-    .badge-verified { background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
-    .badge-guest { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3); }
-    .badge-status { background: rgba(56, 189, 248, 0.12); color: var(--accent-cyan); }
+    .btn-mono {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      background: var(--bg-card);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 120ms ease;
+    }
 
-    .main-grid {
-      display: grid;
-      grid-template-columns: 1fr 340px;
-      gap: 16px;
+    .btn-mono:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-main);
+      border-color: var(--border-strong);
+    }
+
+    .btn-mono.primary {
+      background: #ffffff;
+      color: #000000;
+      border-color: #ffffff;
+    }
+
+    .btn-mono.primary:hover {
+      background: #e4e4e7;
+    }
+
+    /* Content Area: Chat View & Memory Inspector */
+    .workspace-content {
       flex: 1;
-      min-height: 0;
-    }
-
-    .chat-panel {
-      background: var(--panel-bg);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--panel-border);
-      border-radius: 24px;
-      display: flex;
-      flex-direction: column;
-      box-shadow: var(--shadow-glow);
+      display: grid;
+      grid-template-columns: 1fr 360px;
       overflow: hidden;
     }
 
-    .chat-log {
+    /* Chat / Prompt Section */
+    .chat-section {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border-subtle);
+      background: var(--bg-main);
+      overflow: hidden;
+    }
+
+    .chat-feed {
       flex: 1;
       padding: 20px;
       overflow-y: auto;
@@ -153,274 +257,521 @@ INDEX_HTML = """<!doctype html>
       gap: 16px;
     }
 
-    .bubble {
-      max-width: 80%;
-      padding: 14px 18px;
-      border-radius: 20px;
-      line-height: 1.6;
-      font-size: 0.95rem;
+    .message-card {
+      padding: 14px 16px;
+      border-radius: 4px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      animation: fadeIn 150ms ease-out;
+    }
+
+    .message-card.user {
+      border-color: var(--border-strong);
+      background: #0d0d10;
+    }
+
+    .message-card.assistant {
+      border-left: 2px solid #ffffff;
+      background: var(--bg-card);
+    }
+
+    .message-card.system-note {
+      border-style: dashed;
+      background: transparent;
+      color: var(--text-dim);
+      font-size: 11px;
+    }
+
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .message-card.user .message-header { color: var(--text-main); }
+    .message-card.assistant .message-header { color: #ffffff; }
+
+    .message-body {
+      color: var(--text-main);
       white-space: pre-wrap;
       word-break: break-word;
-      animation: fadeIn 200ms ease-out;
-      border: 1px solid var(--panel-border);
+      font-size: 13px;
+      line-height: 1.6;
     }
 
-    .bubble.user {
-      align-self: flex-end;
-      background: var(--user-bg);
-      color: #f8fafc;
-      border-bottom-right-radius: 4px;
+    .tool-badge-item {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 1px 6px;
+      border: 1px solid var(--border-strong);
+      background: #000000;
+      color: #ffffff;
+      border-radius: 2px;
+      margin-left: 6px;
     }
 
-    .bubble.roha {
-      align-self: flex-start;
-      background: var(--roha-bg);
-      color: #f1f5f9;
-      border-bottom-left-radius: 4px;
-      border-left: 3px solid var(--accent-cyan);
-    }
-
-    .bubble.meta {
-      align-self: center;
-      background: rgba(56, 189, 248, 0.1);
-      color: var(--accent-cyan);
-      font-size: 0.85rem;
-      border: 1px dashed rgba(56, 189, 248, 0.3);
-    }
-
-    .composer {
-      padding: 16px;
-      background: rgba(15, 23, 42, 0.85);
-      border-top: 1px solid var(--panel-border);
+    /* Composer Input Bar */
+    .composer-area {
+      padding: 14px 16px;
+      background: var(--bg-sidebar);
+      border-top: 1px solid var(--border-subtle);
       display: flex;
-      gap: 10px;
-      align-items: center;
+      flex-direction: column;
+      gap: 8px;
     }
 
-    .composer input {
+    .composer-box {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 4px 8px;
+    }
+
+    .composer-box:focus-within {
+      border-color: var(--border-focus);
+    }
+
+    .composer-box input {
       flex: 1;
-      background: rgba(30, 41, 59, 0.8);
-      border: 1px solid var(--panel-border);
-      border-radius: 16px;
-      padding: 14px 18px;
-      color: white;
-      font-size: 0.95rem;
-      outline: none;
-      transition: border-color 150ms;
-    }
-
-    .composer input:focus {
-      border-color: var(--accent-cyan);
-    }
-
-    .btn {
-      padding: 12px 20px;
-      border-radius: 16px;
-      font-weight: 700;
-      font-size: 0.9rem;
+      background: transparent;
       border: none;
-      cursor: pointer;
-      transition: all 150ms ease;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      color: var(--text-main);
+      font-size: 13px;
+      font-family: inherit;
+      padding: 8px 4px;
+      outline: none;
     }
 
-    .btn-primary { background: linear-gradient(135deg, #0284c7, #0369a1); color: white; }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4); }
+    .composer-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
 
-    .btn-accent { background: linear-gradient(135deg, var(--accent-purple), #7e22ce); color: white; }
-    .btn-accent:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4); }
+    /* Right Inspector / Knowledge Panel */
+    .inspector-panel {
+      background: var(--bg-sidebar);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-    .btn-secondary { background: #1e293b; color: var(--text-main); border: 1px solid var(--panel-border); }
-    .btn-secondary:hover { background: #334155; }
+    .inspector-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-    .sidebar {
+    .inspector-scroll {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 16px;
-      overflow-y: auto;
     }
 
-    .card {
-      background: var(--panel-bg);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--panel-border);
-      border-radius: 20px;
-      padding: 18px;
-      box-shadow: var(--shadow-glow);
+    .inspector-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    .card h3 {
-      margin: 0 0 14px;
-      font-size: 1.05rem;
+    .inspector-card-title {
+      font-size: 11px;
       font-weight: 700;
-      color: var(--accent-cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #ffffff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 6px;
+    }
+
+    .rag-snippet {
+      padding: 8px;
+      background: #0a0a0c;
+      border: 1px solid var(--border-strong);
+      border-radius: 3px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .stat-label { color: var(--text-dim); }
+    .stat-value { font-weight: 600; color: #ffffff; font-family: var(--font-mono); }
+
+    .tool-chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tool-chip {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 3px 8px;
+      background: #000000;
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+      border-radius: 3px;
+    }
+
+    /* Passphrase Gate Modal Overlay (Black & White) */
+    .gate-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .gate-overlay.hidden { display: none; }
+
+    .gate-modal {
+      background: #0d0d10;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      padding: 24px;
+      width: 420px;
+      max-width: 90%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    }
+
+    .gate-modal h2 {
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #ffffff;
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    .kv-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      font-size: 0.88rem;
+    .gate-modal p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
     }
 
-    .kv-row {
-      display: flex;
-      justify-content: space-between;
-      padding-bottom: 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .kv-key { color: var(--text-muted); }
-    .kv-val { font-weight: 600; }
-
-    .tools-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .tool-chip {
-      padding: 8px 10px;
-      background: rgba(30, 41, 59, 0.6);
-      border: 1px solid var(--panel-border);
-      border-radius: 12px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #7dd3fc;
-      text-align: center;
-    }
-
-    .auth-box {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .auth-box input {
-      flex: 1;
-      background: #1e293b;
-      border: 1px solid var(--panel-border);
-      border-radius: 12px;
-      padding: 8px 12px;
-      color: white;
-      font-size: 0.88rem;
+    .gate-modal input {
+      background: #000000;
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      color: #ffffff;
+      font-family: var(--font-mono);
+      padding: 10px 12px;
+      font-size: 13px;
       outline: none;
     }
 
+    .gate-modal input:focus {
+      border-color: #ffffff;
+    }
+
+    .gate-btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
+      from { opacity: 0; transform: translateY(4px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    @media (max-width: 900px) {
-      .main-grid { grid-template-columns: 1fr; }
-      .sidebar { display: none; }
+    @media (max-width: 960px) {
+      aside.workspace-sidebar { display: none; }
+      .workspace-content { grid-template-columns: 1fr; }
+      .inspector-panel { display: none; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div class="brand">
-        <div class="logo-orb">R</div>
-        <div class="brand-text">
-          <h1>Roha Agent</h1>
-          <p>Local Autonomous Assistant</p>
-        </div>
-      </div>
-      <div class="header-badges">
-        <div class="badge badge-status" id="statusBadge">State: Idle</div>
-        <div class="badge badge-guest" id="authBadge">🔒 Guest Mode</div>
-      </div>
-    </header>
 
-    <div class="main-grid">
-      <div class="chat-panel">
-        <div class="chat-log" id="chatLog"></div>
-        <form class="composer" id="composer">
-          <input id="messageInput" autocomplete="off" placeholder="Ask Roha anything or command tools..." />
-          <button type="button" class="btn btn-accent" id="micBtn" title="Hold/Click to speak">🎤 Voice</button>
-          <button type="submit" class="btn btn-primary">Send</button>
-        </form>
-      </div>
-
-      <div class="sidebar">
-        <div class="card">
-          <h3>🔐 Creator Security</h3>
-          <div class="kv-list">
-            <div class="kv-row"><span class="kv-key">Security Status</span><span class="kv-val" id="secStatus">Guest</span></div>
-            <div class="kv-row"><span class="kv-key">Creator</span><span class="kv-val">Roshan Kumar</span></div>
-          </div>
-          <div class="auth-box">
-            <input type="password" id="pinInput" placeholder="Enter Owner PIN (1430)..." />
-            <button class="btn btn-primary" id="authBtn">Unlock</button>
-          </div>
+  <!-- Passphrase Gate Modal -->
+  <div class="gate-overlay" id="gateOverlay">
+    <div class="gate-modal">
+      <h2>ROHA // AUTHENTICATION GATE</h2>
+      <p>Enter owner passphrase / PIN (default: <strong>1430</strong>) to unlock creator privileges, workspace file tools, and full RAG memory.</p>
+      <form id="gateForm" style="display: flex; flex-direction: column; gap: 12px;">
+        <input type="password" id="gatePinInput" placeholder="ENTER PASSPHRASE / PIN..." autofocus />
+        <div class="gate-btn-group">
+          <button type="submit" class="btn-mono primary" style="flex: 1; padding: 10px;">UNLOCK CREATOR ACCESS</button>
+          <button type="button" class="btn-mono" id="gateGuestBtn" style="padding: 10px;">GUEST MODE</button>
         </div>
-
-        <div class="card">
-          <h3>🛠️ Active Agent Tools</h3>
-          <div class="tools-grid" id="toolsGrid">
-            <div class="tool-chip">calculator</div>
-            <div class="tool-chip">system_info</div>
-            <div class="tool-chip">read_file</div>
-            <div class="tool-chip">list_directory</div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>⚙️ System Details</h3>
-          <div class="kv-list">
-            <div class="kv-row"><span class="kv-key">Model</span><span class="kv-val" id="modelVal">-</span></div>
-            <div class="kv-row"><span class="kv-key">ReAct Steps</span><span class="kv-val">Max 5</span></div>
-            <div class="kv-row"><span class="kv-key">Memory</span><span class="kv-val">SQLite + RAG</span></div>
-          </div>
-          <div style="margin-top: 14px; display: flex; gap: 8px;">
-            <button class="btn btn-secondary" style="flex:1" id="resetBtn">Reset Session</button>
-          </div>
-        </div>
-      </div>
+      </form>
     </div>
   </div>
 
+  <!-- Left Sidebar (Odysseus Style) -->
+  <aside class="workspace-sidebar">
+    <div>
+      <div class="brand-header">
+        <div class="brand-logo">R</div>
+        <div class="brand-title">ROHA WORKSPACE</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Workspace Modules</div>
+        <div class="nav-item active" id="navChat"><span class="nav-icon">&gt;_</span> AI Chat &amp; ReAct Agent</div>
+        <div class="nav-item" id="navMemory"><span class="nav-icon">[]</span> SQLite RAG Vault</div>
+        <div class="nav-item" id="navTools"><span class="nav-icon">{}</span> Active Skills &amp; Tools</div>
+        <div class="nav-item" id="navCookbook"><span class="nav-icon">#</span> Hardware Profiler</div>
+        
+        <div class="nav-label" style="margin-top: 12px;">Security &amp; Auth</div>
+        <div class="nav-item" id="navSecurity"><span class="nav-icon">*</span> Creator Access Gate</div>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <span>LOCAL HOST: 8000</span>
+      <span id="sidebarStatus">ONLINE</span>
+    </div>
+  </aside>
+
+  <!-- Main Center Workspace -->
+  <main class="workspace-main">
+    <!-- Header -->
+    <header class="workspace-header">
+      <div class="header-left">
+        <span style="font-weight: 700;">WORKSPACE // CONSOLE</span>
+        <span class="header-badge" id="headerModel">qwen2.5:3b-instruct</span>
+        <span class="header-badge" id="headerLatency">0.00s</span>
+        <span class="header-badge" id="headerState">IDLE</span>
+      </div>
+      <div class="header-right">
+        <span class="header-badge highlight" id="headerAuth" style="cursor: pointer;" title="Click to open Passphrase Gate">GUEST MODE</span>
+        <button class="btn-mono" id="clearBtn">CLEAR</button>
+        <button class="btn-mono" id="micToggleBtn">MIC</button>
+      </div>
+    </header>
+
+    <!-- Workspace Content (Chat + Inspector) -->
+    <div class="workspace-content">
+      
+      <!-- Chat Feed & Composer -->
+      <section class="chat-section">
+        <div class="chat-feed" id="chatFeed">
+          <div class="message-card system-note">
+            <div class="message-header">SYSTEM // INITIALIZATION</div>
+            <div class="message-body">Roha AI Agent online. Type your instruction or command below. Local RAG memory active.</div>
+          </div>
+        </div>
+
+        <div class="composer-area">
+          <form class="composer-box" id="composerForm">
+            <input id="promptInput" autocomplete="off" placeholder="Ask Roha, execute tools, or inspect files..." />
+            <button type="submit" class="btn-mono primary">SEND</button>
+          </form>
+          <div class="composer-actions">
+            <span>Press Enter to send • ReAct Multi-step Autonomous Loop</span>
+            <span id="charCounter">Ready</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Knowledge & Memory Inspector -->
+      <aside class="inspector-panel">
+        <div class="inspector-header">
+          <span>RAG MEMORY &amp; STATS</span>
+          <span style="font-family: var(--font-mono); font-size: 10px;">SQLITE 3</span>
+        </div>
+
+        <div class="inspector-scroll">
+          
+          <!-- Current Turn Retrieved RAG Context -->
+          <div class="inspector-card">
+            <div class="inspector-card-title">
+              <span>RAG RETRIEVED (CURRENT TURN)</span>
+            </div>
+            <div id="ragContainer" style="display: flex; flex-direction: column; gap: 6px;">
+              <span style="color: var(--text-dim); font-size: 11px;">No RAG context fetched for this query yet.</span>
+            </div>
+          </div>
+
+          <!-- Active Tools Registry -->
+          <div class="inspector-card">
+            <div class="inspector-card-title">
+              <span>AVAILABLE AGENT TOOLS</span>
+            </div>
+            <div class="tool-chip-group">
+              <span class="tool-chip">calculator</span>
+              <span class="tool-chip">system_info</span>
+              <span class="tool-chip">read_file</span>
+              <span class="tool-chip">list_directory</span>
+            </div>
+          </div>
+
+          <!-- Hardware & System Specs (Odysseus Style) -->
+          <div class="inspector-card">
+            <div class="inspector-card-title">
+              <span>SYSTEM PROFILE</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div class="stat-row"><span class="stat-label">Model Runtime</span><span class="stat-value" id="statModel">qwen2.5:3b</span></div>
+              <div class="stat-row"><span class="stat-label">Inference Latency</span><span class="stat-value" id="statLatency">0.00s</span></div>
+              <div class="stat-row"><span class="stat-label">ReAct Step Bound</span><span class="stat-value">5 Steps Max</span></div>
+              <div class="stat-row"><span class="stat-label">Memory Backend</span><span class="stat-value">SQLite + Vector</span></div>
+              <div class="stat-row"><span class="stat-label">Creator Auth</span><span class="stat-value" id="statAuth">Unverified</span></div>
+            </div>
+          </div>
+
+          <!-- Recent SQLite Memory Store -->
+          <div class="inspector-card">
+            <div class="inspector-card-title">
+              <span>SQLITE MEMORY VAULT</span>
+            </div>
+            <div id="sqliteContainer" style="display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto;">
+              <span style="color: var(--text-dim); font-size: 11px;">Loading SQLite memory...</span>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
   <script>
-    const chatLog = document.getElementById('chatLog');
-    const statusBadge = document.getElementById('statusBadge');
-    const authBadge = document.getElementById('authBadge');
-    const secStatus = document.getElementById('secStatus');
-    const modelVal = document.getElementById('modelVal');
-    const composer = document.getElementById('composer');
-    const messageInput = document.getElementById('messageInput');
-    const pinInput = document.getElementById('pinInput');
-    const authBtn = document.getElementById('authBtn');
-    const micBtn = document.getElementById('micBtn');
-    const resetBtn = document.getElementById('resetBtn');
+    const chatFeed = document.getElementById('chatFeed');
+    const promptInput = document.getElementById('promptInput');
+    const composerForm = document.getElementById('composerForm');
+    const headerModel = document.getElementById('headerModel');
+    const headerLatency = document.getElementById('headerLatency');
+    const headerState = document.getElementById('headerState');
+    const headerAuth = document.getElementById('headerAuth');
+    const statModel = document.getElementById('statModel');
+    const statLatency = document.getElementById('statLatency');
+    const statAuth = document.getElementById('statAuth');
+    const clearBtn = document.getElementById('clearBtn');
+    const micToggleBtn = document.getElementById('micToggleBtn');
+    const gateOverlay = document.getElementById('gateOverlay');
+    const gateForm = document.getElementById('gateForm');
+    const gatePinInput = document.getElementById('gatePinInput');
+    const gateGuestBtn = document.getElementById('gateGuestBtn');
+    const ragContainer = document.getElementById('ragContainer');
+    const sqliteContainer = document.getElementById('sqliteContainer');
+    const navSecurity = document.getElementById('navSecurity');
 
     let recording = false;
     let mediaRecorder = null;
     let audioChunks = [];
 
-    function addBubble(role, text) {
-      const bubble = document.createElement('div');
-      bubble.className = `bubble ${role}`;
-      bubble.textContent = text;
-      chatLog.appendChild(bubble);
-      chatLog.scrollTop = chatLog.scrollHeight;
+    function addMessage(role, text, toolTraces = []) {
+      const card = document.createElement('div');
+      card.className = `message-card ${role}`;
+
+      const header = document.createElement('div');
+      header.className = 'message-header';
+      header.textContent = role === 'user' ? 'USER' : (role === 'assistant' ? 'ROHA' : 'SYSTEM');
+
+      if (toolTraces && toolTraces.length > 0) {
+        toolTraces.forEach(toolName => {
+          const badge = document.createElement('span');
+          badge.className = 'tool-badge-item';
+          badge.textContent = `TOOL: ${toolName}`;
+          header.appendChild(badge);
+        });
+      }
+
+      const body = document.createElement('div');
+      body.className = 'message-body';
+      body.textContent = text;
+
+      card.appendChild(header);
+      card.appendChild(body);
+      chatFeed.appendChild(card);
+      chatFeed.scrollTop = chatFeed.scrollHeight;
     }
 
-    function renderMessages(messages) {
-      chatLog.innerHTML = '';
-      messages.forEach((msg) => {
-        if (msg.role === 'system') return;
-        addBubble(msg.role === 'assistant' ? 'roha' : 'user', msg.content || '');
+    function renderFeed(messages) {
+      chatFeed.innerHTML = '';
+      const initCard = document.createElement('div');
+      initCard.className = 'message-card system-note';
+      initCard.innerHTML = '<div class="message-header">SYSTEM // INITIALIZATION</div><div class="message-body">Roha AI Agent online. Type your instruction or command below. Local RAG memory active.</div>';
+      chatFeed.appendChild(initCard);
+
+      messages.forEach(m => {
+        if (m.role === 'system') return;
+        addMessage(m.role, m.content || '');
       });
-      if (!chatLog.children.length) {
-        addBubble('meta', '👋 Welcome to Roha Agent Console! Type a prompt or use Voice to begin.');
+    }
+
+    function renderRagSnippets(snippets) {
+      ragContainer.innerHTML = '';
+      if (!snippets || snippets.length === 0) {
+        ragContainer.innerHTML = '<span style="color: var(--text-dim); font-size: 11px;">No RAG context fetched for this query yet.</span>';
+        return;
       }
+      snippets.forEach(snip => {
+        const d = document.createElement('div');
+        d.className = 'rag-snippet';
+        d.textContent = snip;
+        ragContainer.appendChild(d);
+      });
+    }
+
+    function renderSqliteMemories(memories) {
+      sqliteContainer.innerHTML = '';
+      if (!memories || memories.length === 0) {
+        sqliteContainer.innerHTML = '<span style="color: var(--text-dim); font-size: 11px;">SQLite memory empty.</span>';
+        return;
+      }
+      memories.slice().reverse().forEach(rec => {
+        const item = document.createElement('div');
+        item.style.fontSize = '11px';
+        item.style.color = 'var(--text-muted)';
+        item.style.padding = '4px 0';
+        item.style.borderBottom = '1px solid rgba(255,255,255,0.04)';
+        item.textContent = typeof rec === 'string' ? rec : (rec.content || JSON.stringify(rec));
+        sqliteContainer.appendChild(item);
+      });
     }
 
     async function api(path, body) {
@@ -435,61 +786,84 @@ INDEX_HTML = """<!doctype html>
     async function refreshState() {
       try {
         const state = await api('/api/state');
-        statusBadge.textContent = `State: ${state.status_text || 'Idle'}`;
-        modelVal.textContent = state.model || 'qwen2.5:3b-instruct';
-        
+        headerModel.textContent = state.model || 'qwen2.5:3b-instruct';
+        statModel.textContent = state.model || 'qwen2.5:3b-instruct';
+        headerLatency.textContent = `${state.last_latency || 0.00}s`;
+        statLatency.textContent = `${state.last_latency || 0.00}s`;
+        headerState.textContent = state.status_text ? state.status_text.toUpperCase() : 'IDLE';
+
         if (state.is_verified) {
-          authBadge.className = 'badge badge-verified';
-          authBadge.textContent = '🔓 Verified Creator';
-          secStatus.textContent = 'Verified (Roshan Kumar)';
+          headerAuth.textContent = 'VERIFIED CREATOR';
+          headerAuth.style.borderColor = '#ffffff';
+          statAuth.textContent = 'Roshan (Verified)';
+          gateOverlay.classList.add('hidden');
         } else {
-          authBadge.className = 'badge badge-guest';
-          authBadge.textContent = '🔒 Guest Mode';
-          secStatus.textContent = 'Guest / Restricted';
+          headerAuth.textContent = 'GUEST MODE';
+          headerAuth.style.borderColor = 'var(--border-subtle)';
+          statAuth.textContent = 'Guest (Restricted)';
         }
 
-        renderMessages(state.messages || []);
+        renderRagSnippets(state.last_rag_snippets || []);
+        renderSqliteMemories(state.sqlite_memories || []);
+        renderFeed(state.messages || []);
       } catch (err) {
-        console.warn('Failed to refresh state', err);
+        console.warn('Refresh state error', err);
       }
     }
 
-    composer.addEventListener('submit', async (e) => {
+    composerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const msg = messageInput.value.trim();
+      const msg = promptInput.value.trim();
       if (!msg) return;
-      messageInput.value = '';
-      addBubble('user', msg);
-      statusBadge.textContent = 'State: Thinking...';
+      promptInput.value = '';
+      addMessage('user', msg);
+      headerState.textContent = 'THINKING...';
 
       try {
         const res = await api('/api/chat', { message: msg });
-        addBubble('roha', res.reply || '');
+        addMessage('assistant', res.reply || '', res.tools_executed || []);
+        headerLatency.textContent = `${res.latency || 0.00}s`;
+        statLatency.textContent = `${res.latency || 0.00}s`;
+        renderRagSnippets(res.rag_snippets || []);
         await refreshState();
       } catch (err) {
-        addBubble('meta', 'Error sending message to Roha backend.');
+        addMessage('system-note', 'Error connecting to Roha local server.');
       }
     });
 
-    authBtn.addEventListener('click', async () => {
-      const pin = pinInput.value.trim();
+    gateForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pin = gatePinInput.value.trim();
       if (!pin) return;
       const res = await api('/api/auth', { pin });
       if (res.ok) {
-        pinInput.value = '';
-        alert('🔓 Creator Verified successfully!');
+        gateOverlay.classList.add('hidden');
+        addMessage('system-note', '🔓 Creator passphrase verified. Workspace tools and RAG memory unlocked.');
       } else {
-        alert('❌ Invalid Owner PIN!');
+        alert('❌ Invalid Passphrase / PIN.');
       }
       await refreshState();
     });
 
-    resetBtn.addEventListener('click', async () => {
+    gateGuestBtn.addEventListener('click', () => {
+      gateOverlay.classList.add('hidden');
+      addMessage('system-note', '🔒 Operating in Guest mode. File inspection tools restricted.');
+    });
+
+    headerAuth.addEventListener('click', () => {
+      gateOverlay.classList.remove('hidden');
+    });
+
+    navSecurity.addEventListener('click', () => {
+      gateOverlay.classList.remove('hidden');
+    });
+
+    clearBtn.addEventListener('click', async () => {
       await api('/api/reset', {});
       await refreshState();
     });
 
-    micBtn.addEventListener('click', async () => {
+    micToggleBtn.addEventListener('click', async () => {
       if (!recording) {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -498,7 +872,7 @@ INDEX_HTML = """<!doctype html>
           mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
           mediaRecorder.onstop = async () => {
             const blob = new Blob(audioChunks, { type: 'audio/webm' });
-            statusBadge.textContent = 'State: Transcribing voice...';
+            headerState.textContent = 'TRANSCRIBING...';
             try {
               const res = await fetch('/api/voice/chat', {
                 method: 'POST',
@@ -506,31 +880,41 @@ INDEX_HTML = """<!doctype html>
                 body: blob,
               });
               const data = await res.json();
-              if (data.transcript) addBubble('user', data.transcript);
-              if (data.reply) addBubble('roha', data.reply);
+              if (data.transcript) addMessage('user', data.transcript);
+              if (data.reply) addMessage('assistant', data.reply, data.tools_executed || []);
               await refreshState();
             } catch (err) {
-              addBubble('meta', 'Voice transcription failed.');
+              addMessage('system-note', 'Voice transcription failed.');
             }
           };
           mediaRecorder.start();
           recording = true;
-          micBtn.textContent = '🛑 Stop Mic';
-          micBtn.style.background = '#ef4444';
-          statusBadge.textContent = 'State: Recording mic...';
+          micToggleBtn.textContent = 'STOP';
+          micToggleBtn.style.background = '#ffffff';
+          micToggleBtn.style.color = '#000000';
+          headerState.textContent = 'RECORDING...';
         } catch (err) {
-          alert('Microphone access denied or unsupported.');
+          alert('Microphone access unsupported or denied.');
         }
       } else {
         mediaRecorder.stop();
         recording = false;
-        micBtn.textContent = '🎤 Voice';
-        micBtn.style.background = '';
+        micToggleBtn.textContent = 'MIC';
+        micToggleBtn.style.background = '';
+        micToggleBtn.style.color = '';
       }
     });
 
-    refreshState();
-    setInterval(refreshState, 3000);
+    // Check verification status on load
+    refreshState().then(() => {
+      api('/api/state').then(st => {
+        if (!st.is_verified) {
+          gateOverlay.classList.remove('hidden');
+        }
+      });
+    });
+
+    setInterval(refreshState, 4000);
   </script>
 </body>
 </html>
@@ -550,23 +934,32 @@ class WebState:
 
 
 class RohaHTTPServer(ThreadingHTTPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
     def __init__(self, server_address, RequestHandlerClass, state: WebState):
-        super().__init__(server_address, RequestHandlerClass)
         self.state = state
+        super().__init__(server_address, RequestHandlerClass)
+
 
 
 class RohaWebHandler(BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+
     def _state(self) -> WebState:
         return self.server.state  # type: ignore[attr-defined]
 
     def _send_json(self, payload, status: int = 200):
+        self.close_connection = True
         data = json.dumps(payload).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(data)))
-        self.send_header("Cache-Control", "no-store")
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
+        self.send_header("Connection", "close")
         self.end_headers()
         self.wfile.write(data)
+        self.wfile.flush()
 
     def _read_json(self):
         length = int(self.headers.get("Content-Length") or 0)
@@ -579,6 +972,7 @@ class RohaWebHandler(BaseHTTPRequestHandler):
         logging.info("%s - %s", self.address_string(), format % args)
 
     def do_GET(self):
+        self.close_connection = True
         parsed = urlparse(self.path)
 
         if parsed.path == "/":
@@ -586,13 +980,23 @@ class RohaWebHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
-            self.send_header("Cache-Control", "no-store")
+            self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
+            self.send_header("Connection", "close")
             self.end_headers()
             self.wfile.write(body)
+            self.wfile.flush()
             return
+
+
 
         if parsed.path == "/api/state":
             state = self._state()
+            sqlite_memories = []
+            try:
+                sqlite_memories = state.session.memory_manager.get_memories(limit=25)
+            except Exception:
+                pass
+
             payload = {
                 "status_text": state.status_text,
                 "last_heard": state.last_heard,
@@ -600,6 +1004,10 @@ class RohaWebHandler(BaseHTTPRequestHandler):
                 "last_error": state.last_error,
                 "is_verified": state.session.is_verified,
                 "model": os.getenv("MODEL", "qwen2.5:3b-instruct"),
+                "last_latency": state.session.last_latency,
+                "last_rag_snippets": state.session.last_rag_snippets,
+                "last_tools_executed": state.session.last_tools_executed,
+                "sqlite_memories": sqlite_memories,
                 "messages": state.session.snapshot_messages(),
             }
             self._send_json(payload)
@@ -620,14 +1028,20 @@ class RohaWebHandler(BaseHTTPRequestHandler):
                 state.last_assistant = reply
                 state.status_text = "Idle"
                 state.last_error = ""
-            self._send_json({"reply": reply})
+            self._send_json({
+                "reply": reply,
+                "latency": state.session.last_latency,
+                "rag_snippets": state.session.last_rag_snippets,
+                "tools_executed": state.session.last_tools_executed,
+                "is_verified": state.session.is_verified,
+            })
             return
 
         if self.path == "/api/auth":
             payload = self._read_json()
             pin = str(payload.get("pin") or "")
             ok = state.session.authenticate(pin)
-            self._send_json({"ok": ok})
+            self._send_json({"ok": ok, "is_verified": state.session.is_verified})
             return
 
         if self.path == "/api/voice/chat":
@@ -657,7 +1071,13 @@ class RohaWebHandler(BaseHTTPRequestHandler):
                 state.last_assistant = reply if transcript else ""
                 state.status_text = "Idle"
                 state.last_error = ""
-            self._send_json({"transcript": transcript, "reply": reply})
+            self._send_json({
+                "transcript": transcript,
+                "reply": reply,
+                "latency": state.session.last_latency,
+                "rag_snippets": state.session.last_rag_snippets,
+                "tools_executed": state.session.last_tools_executed,
+            })
             return
 
         if self.path == "/api/reset":
@@ -767,21 +1187,52 @@ def stop_wake_listener(state: WebState):
         state.status_text = "Stopped"
 
 
-def run_web_app(session: Optional[RohaSession] = None, host: str = "127.0.0.1", port: Optional[int] = None):
+def run_web_app(session: Optional[RohaSession] = None, host: str = "0.0.0.0", port: Optional[int] = None):
+    import subprocess
     session = session or RohaSession()
     state = WebState(session=session)
-    server = RohaHTTPServer((host, port or int(os.getenv("ROHA_WEB_PORT", "8000"))), RohaWebHandler, state)
-    url = f"http://{host}:{server.server_address[1]}"
+    
+    ports_to_try = [port] if port else [int(os.getenv("ROHA_WEB_PORT", "8000")), 8080, 5000, 7000]
+    server = None
+    selected_port = None
+
+    for p in ports_to_try:
+        if not p:
+            continue
+        try:
+            server = RohaHTTPServer((host, p), RohaWebHandler, state)
+            selected_port = p
+            break
+        except OSError:
+            continue
+
+    if server is None:
+        server = RohaHTTPServer((host, 0), RohaWebHandler, state)
+        selected_port = server.server_address[1]
+
+    url = f"http://127.0.0.1:{selected_port}"
     logging.info("Starting Roha web app at %s", url)
+    
+    # Reliably launch default browser on Windows and other OSes
     try:
-        webbrowser.open(url)
+        if hasattr(os, "startfile"):
+            os.startfile(url)
+        elif os.name == "nt":
+            subprocess.Popen(f'cmd /c start "" "{url}"', shell=True)
+        else:
+            webbrowser.open(url)
     except Exception:
-        logging.warning("Failed to open browser automatically")
+        try:
+            webbrowser.open(url)
+        except Exception:
+            logging.warning("Failed to open browser automatically")
+
 
     try:
         print("=" * 60)
-        print(f" 🚀 ROHA AGENT VISUAL CONSOLE READY")
+        print(f" 🚀 ROHA ODYSSEUS-STYLE WORKSPACE READY")
         print(f" 🌐 Running on: {url}")
+        print(f" 🌐 Also accessible at: http://localhost:{selected_port}")
         print(" Opening in your default web browser...")
         print(" Press Ctrl+C in terminal to stop the web server.")
         print("=" * 60)
@@ -793,3 +1244,4 @@ def run_web_app(session: Optional[RohaSession] = None, host: str = "127.0.0.1", 
         server.shutdown()
         server.server_close()
         session.close()
+

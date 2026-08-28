@@ -51,9 +51,15 @@ class RohaSession:
         # Authentication state
         self.is_verified: bool = AUTO_VERIFY_LOCAL_OS
 
+        # Diagnostics & RAG metrics
+        self.last_latency: float = 0.0
+        self.last_rag_snippets: List[str] = []
+        self.last_tools_executed: List[str] = []
+
         # Hydrate session context from DB
         recent_history = self.memory_manager.load_recent_history(limit=HISTORY_LIMIT)
         self.messages: List[Message] = [{"role": "system", "content": self.system_prompt}] + recent_history
+
 
         # Initialize Tool Registry
         self.tool_registry = ToolRegistry()
@@ -92,6 +98,7 @@ class RohaSession:
         return sum(1 for m in self.messages if m.get("role") == "assistant")
 
     def process_user_input(self, user_input: str, speak: bool = False) -> str:
+        import time
         normalized = (user_input or "").strip()
         if not normalized:
             return ""
@@ -99,12 +106,16 @@ class RohaSession:
         if normalized.lower() == "exit":
             return "Goodbye!"
 
+        t_start = time.time()
+        executed_tools: List[str] = []
+
         with self._lock:
             self.messages.append({"role": "user", "content": normalized})
             self.memory_manager.add_message("user", normalized)
 
             # RAG Memory context retrieval
             relevant_snippets = self.memory_manager.get_relevant_memories(normalized, k=3)
+            self.last_rag_snippets = list(relevant_snippets)
             
             # Assemble model context
             to_send = trimmed_messages(self.messages, history_limit=HISTORY_LIMIT)
@@ -131,7 +142,6 @@ class RohaSession:
 
             timeout_val = int(os.getenv("MODEL_TIMEOUT", "30"))
             max_steps = int(os.getenv("ROHA_MAX_STEPS", "5"))
-
 
             try:
                 if not self.cb.call_allowed():
@@ -178,6 +188,7 @@ class RohaSession:
                                         args = {}
 
                                 result_str = self.tool_registry.execute(name, args)
+                                executed_tools.append(name)
                                 observations.append(f"Observation from tool '{name}':\n{result_str}")
 
                             obs_text = "\n\n".join(observations)
@@ -204,6 +215,9 @@ class RohaSession:
                 assistant_reply = "Sorry, something went wrong while generating a response."
 
             self.messages.append({"role": "assistant", "content": assistant_reply})
+            self.last_latency = round(time.time() - t_start, 3)
+            self.last_tools_executed = list(executed_tools)
+
             try:
                 self.memory_manager.add_message("assistant", assistant_reply)
             except Exception:
