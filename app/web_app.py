@@ -591,9 +591,11 @@ INDEX_HTML = """<!doctype html>
       </div>
       <div class="header-right">
         <span class="header-badge highlight" id="headerAuth" style="cursor: pointer;" title="Click to open Passphrase Gate">GUEST MODE</span>
+        <button class="btn-mono" id="ttsToggleBtn" title="Toggle voice speech response">SPEECH: ON 🔊</button>
         <button class="btn-mono" id="clearBtn">CLEAR</button>
         <button class="btn-mono" id="micToggleBtn">MIC</button>
       </div>
+
     </header>
 
     <!-- Workspace Content (Chat + Inspector) -->
@@ -693,6 +695,7 @@ INDEX_HTML = """<!doctype html>
     const statModel = document.getElementById('statModel');
     const statLatency = document.getElementById('statLatency');
     const statAuth = document.getElementById('statAuth');
+    const ttsToggleBtn = document.getElementById('ttsToggleBtn');
     const clearBtn = document.getElementById('clearBtn');
     const micToggleBtn = document.getElementById('micToggleBtn');
     const gateOverlay = document.getElementById('gateOverlay');
@@ -711,6 +714,30 @@ INDEX_HTML = """<!doctype html>
     let audioChunks = [];
     let currentIsVerified = false;
     let lastRenderedMessagesJson = '';
+    let ttsEnabled = localStorage.getItem('roha_tts_enabled') !== 'false';
+
+    function updateTtsButton() {
+      if (ttsToggleBtn) {
+        if (ttsEnabled) {
+          ttsToggleBtn.textContent = 'SPEECH: ON 🔊';
+          ttsToggleBtn.style.color = '#ffffff';
+          ttsToggleBtn.style.borderColor = '#ffffff';
+        } else {
+          ttsToggleBtn.textContent = 'SPEECH: OFF 🔇';
+          ttsToggleBtn.style.color = 'var(--text-dim)';
+          ttsToggleBtn.style.borderColor = 'var(--border-subtle)';
+        }
+      }
+    }
+
+    if (ttsToggleBtn) {
+      ttsToggleBtn.addEventListener('click', () => {
+        ttsEnabled = !ttsEnabled;
+        localStorage.setItem('roha_tts_enabled', ttsEnabled ? 'true' : 'false');
+        updateTtsButton();
+      });
+      updateTtsButton();
+    }
 
     function openGate() {
       gateOverlay.classList.remove('hidden');
@@ -852,7 +879,7 @@ INDEX_HTML = """<!doctype html>
       headerState.textContent = 'THINKING...';
 
       try {
-        const res = await api('/api/chat', { message: msg });
+        const res = await api('/api/chat', { message: msg, speak: ttsEnabled });
         addMessage('assistant', res.reply || '', res.tools_executed || []);
         headerLatency.textContent = `${res.latency || 0.00}s`;
         statLatency.textContent = `${res.latency || 0.00}s`;
@@ -930,7 +957,10 @@ INDEX_HTML = """<!doctype html>
             try {
               const res = await fetch('/api/voice/chat', {
                 method: 'POST',
-                headers: { 'Content-Type': 'audio/webm' },
+                headers: { 
+                  'Content-Type': 'audio/webm',
+                  'X-Speak': ttsEnabled ? '1' : '0'
+                },
                 body: blob,
               });
               const data = await res.json();
@@ -1110,7 +1140,9 @@ class RohaWebHandler(BaseHTTPRequestHandler):
                     audio_path = temp_file.name
 
                 transcript = transcribe_audio(audio_path).strip()
-                reply = state.session.process_user_input(transcript, speak=False) if transcript else ""
+                speak_opt = (self.headers.get("X-Speak") or "1").lower() in ("1", "true", "yes") and bool(state.session.tts)
+                reply = state.session.process_user_input(transcript, speak=speak_opt) if transcript else ""
+
             finally:
                 if audio_path:
                     try:
