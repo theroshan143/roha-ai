@@ -16,6 +16,7 @@ from tools.builtin import (
     ReadFileTool,
     WriteFileTool,
     EditFileTool,
+    DeleteFileTool,
     ExecuteCommandTool,
     WebSearchTool,
     FetchUrlTool,
@@ -76,6 +77,7 @@ class RohaSession:
         self.tool_registry.register(ReadFileTool())
         self.tool_registry.register(WriteFileTool())
         self.tool_registry.register(EditFileTool())
+        self.tool_registry.register(DeleteFileTool())
         self.tool_registry.register(ExecuteCommandTool())
         self.tool_registry.register(WebSearchTool())
         self.tool_registry.register(FetchUrlTool())
@@ -154,7 +156,6 @@ class RohaSession:
                 guest_tools = [CalculatorTool(), SystemInfoTool(), WebSearchTool()]
                 tools_schema = [t.to_ollama_schema() for t in guest_tools]
 
-
             timeout_val = int(os.getenv("MODEL_TIMEOUT", "30"))
             max_steps = int(os.getenv("ROHA_MAX_STEPS", "5"))
 
@@ -185,10 +186,11 @@ class RohaSession:
 
                             # Model requested tool execution
                             logging.info("[Step %d/%d] Executing %d tool calls requested by model", step, max_steps, len(tool_calls))
-                            scratchpad.append({
-                                "role": "assistant",
-                                "content": content or f"[Executing tools for step {step}...]",
-                            })
+                            if content:
+                                scratchpad.append({
+                                    "role": "assistant",
+                                    "content": content,
+                                })
 
                             observations = []
                             for tool_call in tool_calls:
@@ -213,13 +215,18 @@ class RohaSession:
                             })
 
                         # Fallback synthesis if max_steps reached without final text
-                        if not assistant_reply and step >= max_steps:
-                            logging.warning("ReAct loop reached MAX_STEPS (%d); forcing final synthesis.", max_steps)
+                        if not assistant_reply:
+                            logging.info("ReAct loop completed tool turns; requesting final synthesis.")
+                            scratchpad.append({
+                                "role": "user",
+                                "content": "Please synthesize all observations and findings above to provide your final, complete answer to the user. Do not include execution placeholder markers.",
+                            })
                             final_resp = _call_model_with_timeout(scratchpad, tools=None, timeout=timeout_val)
-                            assistant_reply = final_resp.get("content", "Completed task execution limit.")
+                            assistant_reply = final_resp.get("content", "I have completed the operations.")
 
                         if not assistant_reply:
                             assistant_reply = "I completed the requested operations."
+
 
                     except Exception:
                         logging.exception("Model call failed during ReAct loop")

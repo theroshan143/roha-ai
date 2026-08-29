@@ -5,6 +5,7 @@ from tools.builtin import (
     ReadFileTool,
     WriteFileTool,
     EditFileTool,
+    DeleteFileTool,
     ExecuteCommandTool,
     WebSearchTool,
     FetchUrlTool,
@@ -19,11 +20,13 @@ __all__ = [
     "ReadFileTool",
     "WriteFileTool",
     "EditFileTool",
+    "DeleteFileTool",
     "ExecuteCommandTool",
     "WebSearchTool",
     "FetchUrlTool",
     "SystemInfoTool",
     "ListDirectoryTool",
 ]
+
 
 

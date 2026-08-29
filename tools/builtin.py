@@ -171,6 +171,37 @@ class EditFileTool(BaseTool):
             return f"Error editing file '{file_path}': {str(e)}"
 
 
+class DeleteFileTool(BaseTool):
+    name = "delete_file"
+    description = "Delete a specific file or empty folder in the workspace."
+    parameters = {
+        "type": "object",
+        "properties": {
+            "file_path": {
+                "type": "string",
+                "description": "Path to the file to delete.",
+            }
+        },
+        "required": ["file_path"],
+    }
+
+    def execute(self, file_path: str = "", **kwargs: Any) -> str:
+        if not file_path:
+            return "Error: file_path is required."
+        if not os.path.exists(file_path):
+            return f"Error: File '{file_path}' does not exist."
+        try:
+            if os.path.isdir(file_path):
+                os.rmdir(file_path)
+                return f"Successfully removed directory '{file_path}'."
+            else:
+                os.remove(file_path)
+                return f"Successfully deleted file '{file_path}'."
+        except Exception as e:
+            return f"Error deleting '{file_path}': {str(e)}"
+
+
+
 class ExecuteCommandTool(BaseTool):
     name = "execute_command"
     description = "Execute a local shell or terminal command in the workspace directory with timeout and safety checks."
