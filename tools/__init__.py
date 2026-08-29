@@ -9,6 +9,7 @@ from tools.builtin import (
     ExecuteCommandTool,
     WebSearchTool,
     FetchUrlTool,
+    GitHubTool,
     SystemInfoTool,
     ListDirectoryTool,
 )
@@ -24,9 +25,11 @@ __all__ = [
     "ExecuteCommandTool",
     "WebSearchTool",
     "FetchUrlTool",
+    "GitHubTool",
     "SystemInfoTool",
     "ListDirectoryTool",
 ]
+
 
 
 

@@ -20,6 +20,7 @@ from tools.builtin import (
     ExecuteCommandTool,
     WebSearchTool,
     FetchUrlTool,
+    GitHubTool,
     SystemInfoTool,
     ListDirectoryTool,
 )
@@ -81,6 +82,7 @@ class RohaSession:
         self.tool_registry.register(ExecuteCommandTool())
         self.tool_registry.register(WebSearchTool())
         self.tool_registry.register(FetchUrlTool())
+        self.tool_registry.register(GitHubTool())
         self.tool_registry.register(SystemInfoTool())
         self.tool_registry.register(ListDirectoryTool())
 
@@ -153,8 +155,9 @@ class RohaSession:
                 tools_schema = self.tool_registry.get_schemas()
             else:
                 # Restrict file editing, reading & terminal execution for guest users
-                guest_tools = [CalculatorTool(), SystemInfoTool(), WebSearchTool()]
+                guest_tools = [CalculatorTool(), SystemInfoTool(), WebSearchTool(), GitHubTool()]
                 tools_schema = [t.to_ollama_schema() for t in guest_tools]
+
 
             timeout_val = int(os.getenv("MODEL_TIMEOUT", "30"))
             max_steps = int(os.getenv("ROHA_MAX_STEPS", "5"))

@@ -378,6 +378,93 @@ class FetchUrlTool(BaseTool):
             return f"Error fetching URL '{url}': {str(e)}"
 
 
+class GitHubTool(BaseTool):
+    name = "github_tool"
+    description = "Query GitHub API to list repositories, inspect profile details, or fetch repo info for any user."
+    parameters = {
+        "type": "object",
+        "properties": {
+            "username": {
+                "type": "string",
+                "description": "The GitHub username (e.g. 'theroshan143').",
+            },
+            "action": {
+                "type": "string",
+                "description": "Action to perform: 'list_repos', 'get_profile', 'get_repo'. Default: 'list_repos'.",
+            },
+            "repo_name": {
+                "type": "string",
+                "description": "Specific repository name (if action is 'get_repo').",
+            },
+        },
+        "required": ["username"],
+    }
+
+    def execute(self, username: str = "", action: str = "list_repos", repo_name: str = "", **kwargs: Any) -> str:
+        if not username or not username.strip():
+            return "Error: username parameter is required."
+        user = username.strip()
+        act = (action or "list_repos").strip().lower()
+
+        try:
+            import json
+            if act == "get_profile":
+                url = f"https://api.github.com/users/{user}"
+                req = urllib.request.Request(url, headers={"User-Agent": "Roha-AI-Assistant"})
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                return (
+                    f"GitHub Profile for @{user}:\n"
+                    f"- Name: {data.get('name') or 'N/A'}\n"
+                    f"- Bio: {data.get('bio') or 'N/A'}\n"
+                    f"- Public Repos: {data.get('public_repos', 0)}\n"
+                    f"- Followers: {data.get('followers', 0)}\n"
+                    f"- Profile URL: {data.get('html_url')}"
+                )
+
+            elif act == "get_repo" and repo_name:
+                url = f"https://api.github.com/repos/{user}/{repo_name.strip()}"
+                req = urllib.request.Request(url, headers={"User-Agent": "Roha-AI-Assistant"})
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                return (
+                    f"Repository @{user}/{repo_name}:\n"
+                    f"- Description: {data.get('description') or 'No description'}\n"
+                    f"- Language: {data.get('language') or 'N/A'}\n"
+                    f"- Stars: {data.get('stargazers_count', 0)}\n"
+                    f"- Forks: {data.get('forks_count', 0)}\n"
+                    f"- URL: {data.get('html_url')}"
+                )
+
+            else:
+                # Default: list_repos
+                url = f"https://api.github.com/users/{user}/repos?sort=updated&per_page=30"
+                req = urllib.request.Request(url, headers={"User-Agent": "Roha-AI-Assistant"})
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    repos = json.loads(resp.read().decode("utf-8"))
+
+                if not repos:
+                    return f"User @{user} has no public repositories."
+
+                lines = [f"Public Repositories for @{user} ({len(repos)} found):"]
+                for r in repos:
+                    name = r.get("name")
+                    desc = r.get("description") or "No description"
+                    lang = r.get("language") or "General"
+                    stars = r.get("stargazers_count", 0)
+                    r_url = r.get("html_url")
+                    lines.append(f"- **{name}** ({lang}, {stars} ⭐): {desc}\n  Link: {r_url}")
+
+                return "\n".join(lines)
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return f"GitHub Error: User or repository not found for '{user}'."
+            return f"GitHub API Error (HTTP {e.code}): {str(e)}"
+        except Exception as e:
+            return f"Error querying GitHub: {str(e)}"
+
+
+
 class SystemInfoTool(BaseTool):
     name = "system_info"
     description = "Retrieve basic system information including current local time, operating system, and Python version."
