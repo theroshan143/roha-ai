@@ -5,20 +5,21 @@ import logging
 from typing import List, Optional, Tuple, Any
 from types import TracebackType
 from app.types import Message
+from app.vector_memory import VectorMemoryStore
 
 
 class MemoryManager:
-    """Thread-safe SQLite-backed memory manager.
+    """Thread-safe SQLite-backed memory manager with 3-tier memory support.
 
-    Use `add_message(role, content)` to persist messages,
-    `load_recent_history(limit)` to retrieve formatted context on session hydration,
-    and `get_relevant_memories(query, k)` to fetch RAG snippets.
-    Call `close()` when done to release DB resources.
+    - Tier 1: Working memory (managed in session scratchpad).
+    - Tier 2: Episodic conversation messages (SQLite messages table).
+    - Tier 3: Semantic vector long-term memory (VectorMemoryStore with ONNX embeddings).
     """
 
     def __init__(self, db_path: str = "data/roha.db"):
         self.db_path = db_path
         self._local = threading.local()
+        self.vector_store = VectorMemoryStore(db_path=self.db_path)
         self.create_memory_table()
         atexit.register(self.close)
 
@@ -51,12 +52,20 @@ class MemoryManager:
                 "INSERT INTO messages (role, content) VALUES (?, ?)", (role, content)
             )
             conn.commit()
+
+            # Index meaningful user messages into Tier 3 Vector Knowledge Store
+            if role == "user" and len(content.strip()) > 10:
+                self.vector_store.add_memory(f"User: {content.strip()}", category="conversation")
         except Exception:
             logging.exception("Failed to persist memory message (role=%s)", role)
             try:
                 self._get_connection().rollback()
             except Exception:
                 pass
+
+    def add_semantic_fact(self, text: str, category: str = "user_fact") -> bool:
+        """Explicitly add a verified fact or preference to Tier 3 Vector Knowledge Store."""
+        return self.vector_store.add_memory(text, category=category)
 
     def load_recent_history(self, limit: int = 12) -> List[Message]:
         """Fetch recent conversation messages formatted for RohaSession context hydration."""
@@ -90,10 +99,19 @@ class MemoryManager:
         return [row[0] for row in rows2]
 
     def get_relevant_memories(self, query: str, k: int = 3) -> List[str]:
-        """Return up to k most relevant memory snippets for context injection."""
+        """Return up to k most relevant memory snippets using semantic vector search with fuzzy fallback."""
         if not query or not query.strip():
             return []
 
+        # 1. Query Tier 3 Semantic Vector Memory Store first
+        try:
+            semantic_matches = self.vector_store.search(query, k=k, min_similarity=0.35)
+            if semantic_matches:
+                return [f"{text} (relevance: {round(score, 2)})" for text, score in semantic_matches]
+        except Exception:
+            logging.exception("Semantic vector search failed, falling back to episodic search")
+
+        # 2. Fallback to Episodic Messages Search (Rapidfuzz + Recency)
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
@@ -122,6 +140,7 @@ class MemoryManager:
         except Exception:
             logging.exception("Failed to fetch relevant memories")
             return []
+
 
     def summarize_memory(self, keep_last: int = 50, use_llm: bool = True) -> None:
         """Collapse older messages into a summary entry."""

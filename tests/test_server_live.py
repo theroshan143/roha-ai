@@ -36,6 +36,20 @@ def test_live_server():
         print(f"API State: Model={data.get('model')}, Verified={data.get('is_verified')}")
         print("API state verification: PASSED")
 
+    # Test /api/lock
+    req_lock = urllib.request.Request(f"http://127.0.0.1:{test_port}/api/lock", data=b"{}", headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req_lock) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+        assert data.get("ok") is True and data.get("is_verified") is False
+        print("API /api/lock verification: PASSED")
+
+    # Test /api/auth
+    req_auth = urllib.request.Request(f"http://127.0.0.1:{test_port}/api/auth", data=json.dumps({"pin": "1430"}).encode(), headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req_auth) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+        assert data.get("ok") is True and data.get("is_verified") is True
+        print("API /api/auth verification: PASSED")
+
     server.shutdown()
     server.server_close()
     session.close()

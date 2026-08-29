@@ -537,15 +537,19 @@ INDEX_HTML = """<!doctype html>
 <body>
 
   <!-- Passphrase Gate Modal -->
-  <div class="gate-overlay" id="gateOverlay">
+  <div class="gate-overlay hidden" id="gateOverlay">
     <div class="gate-modal">
-      <h2>ROHA // AUTHENTICATION GATE</h2>
-      <p>Enter owner passphrase / PIN (default: <strong>1430</strong>) to unlock creator privileges, workspace file tools, and full RAG memory.</p>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>ROHA // AUTHENTICATION GATE</h2>
+        <button type="button" id="gateCloseBtn" class="btn-mono" style="padding: 2px 8px; font-size: 13px; border: none; background: transparent; color: var(--text-muted); cursor: pointer;" title="Close (Esc)">✕</button>
+      </div>
+      <p id="gateDescription">Enter owner passphrase / PIN (default: <strong>1430</strong>) to unlock creator privileges, workspace file tools, and full RAG memory.</p>
       <form id="gateForm" style="display: flex; flex-direction: column; gap: 12px;">
-        <input type="password" id="gatePinInput" placeholder="ENTER PASSPHRASE / PIN..." autofocus />
+        <input type="password" id="gatePinInput" placeholder="ENTER PASSPHRASE / PIN..." autocomplete="off" />
         <div class="gate-btn-group">
-          <button type="submit" class="btn-mono primary" style="flex: 1; padding: 10px;">UNLOCK CREATOR ACCESS</button>
-          <button type="button" class="btn-mono" id="gateGuestBtn" style="padding: 10px;">GUEST MODE</button>
+          <button type="submit" class="btn-mono primary" id="gateSubmitBtn" style="flex: 1; padding: 10px;">UNLOCK CREATOR ACCESS</button>
+          <button type="button" class="btn-mono" id="gateLockBtn" style="display: none; padding: 10px;">LOCK SESSION</button>
+          <button type="button" class="btn-mono" id="gateGuestBtn" style="padding: 10px;">DISMISS</button>
         </div>
       </form>
     </div>
@@ -694,7 +698,10 @@ INDEX_HTML = """<!doctype html>
     const gateOverlay = document.getElementById('gateOverlay');
     const gateForm = document.getElementById('gateForm');
     const gatePinInput = document.getElementById('gatePinInput');
+    const gateCloseBtn = document.getElementById('gateCloseBtn');
+    const gateLockBtn = document.getElementById('gateLockBtn');
     const gateGuestBtn = document.getElementById('gateGuestBtn');
+    const gateDescription = document.getElementById('gateDescription');
     const ragContainer = document.getElementById('ragContainer');
     const sqliteContainer = document.getElementById('sqliteContainer');
     const navSecurity = document.getElementById('navSecurity');
@@ -702,6 +709,25 @@ INDEX_HTML = """<!doctype html>
     let recording = false;
     let mediaRecorder = null;
     let audioChunks = [];
+    let currentIsVerified = false;
+    let lastRenderedMessagesJson = '';
+
+    function openGate() {
+      gateOverlay.classList.remove('hidden');
+      gatePinInput.value = '';
+      if (currentIsVerified) {
+        gateDescription.innerHTML = 'Status: <strong>VERIFIED CREATOR (Roshan Kumar)</strong>.<br>Full file inspection and execution tools are active. You can lock session to Guest Mode or re-authenticate.';
+        gateLockBtn.style.display = 'inline-block';
+      } else {
+        gateDescription.innerHTML = 'Enter owner passphrase / PIN (default: <strong>1430</strong>) to unlock creator privileges, workspace file tools, and full RAG memory.';
+        gateLockBtn.style.display = 'none';
+      }
+      setTimeout(() => gatePinInput.focus(), 60);
+    }
+
+    function closeGate() {
+      gateOverlay.classList.add('hidden');
+    }
 
     function addMessage(role, text, toolTraces = []) {
       const card = document.createElement('div');
@@ -731,6 +757,12 @@ INDEX_HTML = """<!doctype html>
     }
 
     function renderFeed(messages) {
+      const currentJson = JSON.stringify(messages || []);
+      if (currentJson === lastRenderedMessagesJson) {
+        return;
+      }
+      lastRenderedMessagesJson = currentJson;
+
       chatFeed.innerHTML = '';
       const initCard = document.createElement('div');
       initCard.className = 'message-card system-note';
@@ -786,6 +818,7 @@ INDEX_HTML = """<!doctype html>
     async function refreshState() {
       try {
         const state = await api('/api/state');
+        currentIsVerified = !!state.is_verified;
         headerModel.textContent = state.model || 'qwen2.5:3b-instruct';
         statModel.textContent = state.model || 'qwen2.5:3b-instruct';
         headerLatency.textContent = `${state.last_latency || 0.00}s`;
@@ -796,7 +829,6 @@ INDEX_HTML = """<!doctype html>
           headerAuth.textContent = 'VERIFIED CREATOR';
           headerAuth.style.borderColor = '#ffffff';
           statAuth.textContent = 'Roshan (Verified)';
-          gateOverlay.classList.add('hidden');
         } else {
           headerAuth.textContent = 'GUEST MODE';
           headerAuth.style.borderColor = 'var(--border-subtle)';
@@ -837,7 +869,7 @@ INDEX_HTML = """<!doctype html>
       if (!pin) return;
       const res = await api('/api/auth', { pin });
       if (res.ok) {
-        gateOverlay.classList.add('hidden');
+        closeGate();
         addMessage('system-note', '🔓 Creator passphrase verified. Workspace tools and RAG memory unlocked.');
       } else {
         alert('❌ Invalid Passphrase / PIN.');
@@ -845,17 +877,39 @@ INDEX_HTML = """<!doctype html>
       await refreshState();
     });
 
+    gateCloseBtn.addEventListener('click', () => {
+      closeGate();
+    });
+
     gateGuestBtn.addEventListener('click', () => {
-      gateOverlay.classList.add('hidden');
-      addMessage('system-note', '🔒 Operating in Guest mode. File inspection tools restricted.');
+      closeGate();
+    });
+
+    gateLockBtn.addEventListener('click', async () => {
+      await api('/api/lock', {});
+      closeGate();
+      addMessage('system-note', '🔒 Session locked into Guest Mode. Personal file access restricted.');
+      await refreshState();
+    });
+
+    gateOverlay.addEventListener('click', (e) => {
+      if (e.target === gateOverlay) {
+        closeGate();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !gateOverlay.classList.contains('hidden')) {
+        closeGate();
+      }
     });
 
     headerAuth.addEventListener('click', () => {
-      gateOverlay.classList.remove('hidden');
+      openGate();
     });
 
     navSecurity.addEventListener('click', () => {
-      gateOverlay.classList.remove('hidden');
+      openGate();
     });
 
     clearBtn.addEventListener('click', async () => {
@@ -906,14 +960,7 @@ INDEX_HTML = """<!doctype html>
     });
 
     // Check verification status on load
-    refreshState().then(() => {
-      api('/api/state').then(st => {
-        if (!st.is_verified) {
-          gateOverlay.classList.remove('hidden');
-        }
-      });
-    });
-
+    refreshState();
     setInterval(refreshState, 4000);
   </script>
 </body>
@@ -1042,6 +1089,11 @@ class RohaWebHandler(BaseHTTPRequestHandler):
             pin = str(payload.get("pin") or "")
             ok = state.session.authenticate(pin)
             self._send_json({"ok": ok, "is_verified": state.session.is_verified})
+            return
+
+        if self.path == "/api/lock":
+            state.session.lock_session()
+            self._send_json({"ok": True, "is_verified": state.session.is_verified})
             return
 
         if self.path == "/api/voice/chat":

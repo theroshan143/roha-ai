@@ -9,7 +9,8 @@ sounddevice
 numpy
 scipy
 keyboard
-rapidfuzz
+# Semantic Embeddings & Vector Memory
+fastembed
 # Testing
 pytest
 
