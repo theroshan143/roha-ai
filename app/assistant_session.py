@@ -6,7 +6,7 @@ import threading
 from typing import Any, Dict, List, Optional
 
 from app.chat import chat_with_roha
-from app.config import DB_PATH, HISTORY_LIMIT, OWNER_NAME, OWNER_PIN, AUTO_VERIFY_LOCAL_OS
+from app.config import DB_PATH, HISTORY_LIMIT, OWNER_NAME, OWNER_PIN, AUTO_VERIFY_LOCAL_OS, MODEL_TIMEOUT
 from app.memory import MemoryManager
 from app.prompts import load_system_prompt
 from app.tts import create_default_tts
@@ -40,9 +40,10 @@ def trimmed_messages(messages: List[Message], history_limit: int = HISTORY_LIMIT
     return trimmed
 
 
-def _call_model_with_timeout(messages: List[Message], tools: Optional[List[Dict[str, Any]]] = None, timeout: int = 30) -> Dict[str, Any]:
+def _call_model_with_timeout(messages: List[Message], tools: Optional[List[Dict[str, Any]]] = None, timeout: int = MODEL_TIMEOUT) -> Dict[str, Any]:
     """Call the chat model with timeout using a persistent thread pool."""
     fut = _MODEL_EXECUTOR.submit(chat_with_roha, messages, tools)
+
     try:
         res = fut.result(timeout=timeout)
         if isinstance(res, str):
@@ -126,8 +127,10 @@ class RohaSession:
 
         t_start = time.time()
         executed_tools: List[str] = []
+        is_error: bool = False
 
         with self._lock:
+
             self.messages.append({"role": "user", "content": normalized})
             self.memory_manager.add_message("user", normalized)
 
@@ -159,8 +162,9 @@ class RohaSession:
                 tools_schema = [t.to_ollama_schema() for t in guest_tools]
 
 
-            timeout_val = int(os.getenv("MODEL_TIMEOUT", "30"))
+            timeout_val = int(os.getenv("MODEL_TIMEOUT", str(MODEL_TIMEOUT)))
             max_steps = int(os.getenv("ROHA_MAX_STEPS", "5"))
+
 
             try:
                 if not self.cb.call_allowed():
@@ -235,18 +239,26 @@ class RohaSession:
                         logging.exception("Model call failed during ReAct loop")
                         self.cb.record_failure()
                         assistant_reply = "I'm having trouble connecting to the model right now. Please try again later."
+                        is_error = True
             except Exception:
                 logging.exception("Unexpected model error")
                 assistant_reply = "Sorry, something went wrong while generating a response."
+                is_error = True
 
-            self.messages.append({"role": "assistant", "content": assistant_reply})
             self.last_latency = round(time.time() - t_start, 3)
             self.last_tools_executed = list(executed_tools)
 
-            try:
-                self.memory_manager.add_message("assistant", assistant_reply)
-            except Exception:
-                logging.exception("Failed to persist assistant message")
+            if not is_error and assistant_reply:
+                self.messages.append({"role": "assistant", "content": assistant_reply})
+                try:
+                    self.memory_manager.add_message("assistant", assistant_reply)
+                except Exception:
+                    logging.exception("Failed to persist assistant message")
+            elif is_error:
+                # Rollback user message from in-memory session if model generation failed
+                if self.messages and self.messages[-1].get("role") == "user":
+                    self.messages.pop()
+
 
             try:
                 if self._assistant_count() % 20 == 0:

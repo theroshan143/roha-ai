@@ -453,7 +453,8 @@ class GitHubTool(BaseTool):
                     lang = r.get("language") or "General"
                     stars = r.get("stargazers_count", 0)
                     r_url = r.get("html_url")
-                    lines.append(f"- **{name}** ({lang}, {stars} ⭐): {desc}\n  Link: {r_url}")
+                    lines.append(f"- **{name}** ({lang}, {stars} stars): {desc}\n  Link: {r_url}")
+
 
                 return "\n".join(lines)
         except urllib.error.HTTPError as e:

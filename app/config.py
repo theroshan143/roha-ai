@@ -38,6 +38,10 @@ VOICE_ENABLED = os.getenv("VOICE_ENABLED", "false").lower() in ("1", "true", "ye
 VOICE_STYLE = os.getenv("VOICE_STYLE", "casual").strip()
 
 # Owner Security & Creator Verification Settings
-OWNER_NAME = os.getenv("ROHA_OWNER_NAME", "Roshan Kumar")
-OWNER_PIN = os.getenv("ROHA_OWNER_PIN", "7398")
+OWNER_NAME = os.getenv("ROHA_OWNER_NAME", "Roshan")
+OWNER_PIN = os.getenv("ROHA_OWNER_PIN", "1430")
 AUTO_VERIFY_LOCAL_OS = os.getenv("ROHA_AUTO_VERIFY_OS", "true").lower() in ("1", "true", "yes")
+
+# Model execution timeout (seconds)
+MODEL_TIMEOUT = int(os.getenv("MODEL_TIMEOUT", "90"))
+
