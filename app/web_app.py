@@ -781,6 +781,7 @@ INDEX_HTML = """<!doctype html>
       card.appendChild(body);
       chatFeed.appendChild(card);
       chatFeed.scrollTop = chatFeed.scrollHeight;
+      return card;
     }
 
     function renderFeed(messages) {
@@ -808,11 +809,11 @@ INDEX_HTML = """<!doctype html>
         ragContainer.innerHTML = '<span style="color: var(--text-dim); font-size: 11px;">No RAG context fetched for this query yet.</span>';
         return;
       }
-      snippets.forEach(snip => {
-        const d = document.createElement('div');
-        d.className = 'rag-snippet';
-        d.textContent = snip;
-        ragContainer.appendChild(d);
+      snippets.forEach(s => {
+        const item = document.createElement('div');
+        item.className = 'rag-snippet-item';
+        item.textContent = s;
+        ragContainer.appendChild(item);
       });
     }
 
@@ -875,17 +876,19 @@ INDEX_HTML = """<!doctype html>
       const msg = promptInput.value.trim();
       if (!msg) return;
       promptInput.value = '';
-      addMessage('user', msg);
+      
       headerState.textContent = 'THINKING...';
+      const tempLoading = addMessage('assistant', 'Thinking & reasoning...');
+      tempLoading.style.opacity = '0.4';
 
       try {
         const res = await api('/api/chat', { message: msg, speak: ttsEnabled });
-        addMessage('assistant', res.reply || '', res.tools_executed || []);
         headerLatency.textContent = `${res.latency || 0.00}s`;
         statLatency.textContent = `${res.latency || 0.00}s`;
         renderRagSnippets(res.rag_snippets || []);
         await refreshState();
       } catch (err) {
+        tempLoading.remove();
         addMessage('system-note', 'Error connecting to Roha local server.');
       }
     });
@@ -954,6 +957,8 @@ INDEX_HTML = """<!doctype html>
           mediaRecorder.onstop = async () => {
             const blob = new Blob(audioChunks, { type: 'audio/webm' });
             headerState.textContent = 'TRANSCRIBING...';
+            const tempLoading = addMessage('assistant', 'Transcribing & processing audio...');
+            tempLoading.style.opacity = '0.4';
             try {
               const res = await fetch('/api/voice/chat', {
                 method: 'POST',
@@ -964,10 +969,10 @@ INDEX_HTML = """<!doctype html>
                 body: blob,
               });
               const data = await res.json();
-              if (data.transcript) addMessage('user', data.transcript);
-              if (data.reply) addMessage('assistant', data.reply, data.tools_executed || []);
+              renderRagSnippets(data.rag_snippets || []);
               await refreshState();
             } catch (err) {
+              tempLoading.remove();
               addMessage('system-note', 'Voice transcription failed.');
             }
           };
