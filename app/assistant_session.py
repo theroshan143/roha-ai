@@ -11,7 +11,17 @@ from app.memory import MemoryManager
 from app.prompts import load_system_prompt
 from app.tts import create_default_tts
 from app.types import Message
-from tools.builtin import CalculatorTool, ReadFileTool, SystemInfoTool, ListDirectoryTool
+from tools.builtin import (
+    CalculatorTool,
+    ReadFileTool,
+    WriteFileTool,
+    EditFileTool,
+    ExecuteCommandTool,
+    WebSearchTool,
+    FetchUrlTool,
+    SystemInfoTool,
+    ListDirectoryTool,
+)
 from tools.registry import ToolRegistry
 
 # Shared persistent thread pool for model execution timeouts
@@ -60,11 +70,15 @@ class RohaSession:
         recent_history = self.memory_manager.load_recent_history(limit=HISTORY_LIMIT)
         self.messages: List[Message] = [{"role": "system", "content": self.system_prompt}] + recent_history
 
-
-        # Initialize Tool Registry
+        # Initialize Tool Registry with Phase 3 Action & Research Tools
         self.tool_registry = ToolRegistry()
         self.tool_registry.register(CalculatorTool())
         self.tool_registry.register(ReadFileTool())
+        self.tool_registry.register(WriteFileTool())
+        self.tool_registry.register(EditFileTool())
+        self.tool_registry.register(ExecuteCommandTool())
+        self.tool_registry.register(WebSearchTool())
+        self.tool_registry.register(FetchUrlTool())
         self.tool_registry.register(SystemInfoTool())
         self.tool_registry.register(ListDirectoryTool())
 
@@ -136,9 +150,10 @@ class RohaSession:
             if self.is_verified:
                 tools_schema = self.tool_registry.get_schemas()
             else:
-                # Restrict read_file & list_directory for guest users
-                guest_tools = [CalculatorTool(), SystemInfoTool()]
+                # Restrict file editing, reading & terminal execution for guest users
+                guest_tools = [CalculatorTool(), SystemInfoTool(), WebSearchTool()]
                 tools_schema = [t.to_ollama_schema() for t in guest_tools]
+
 
             timeout_val = int(os.getenv("MODEL_TIMEOUT", "30"))
             max_steps = int(os.getenv("ROHA_MAX_STEPS", "5"))
