@@ -11,6 +11,9 @@ scipy
 keyboard
 # Semantic Embeddings & Vector Memory
 fastembed
+# Web Search
+ddgs
 # Testing
 pytest
+
 

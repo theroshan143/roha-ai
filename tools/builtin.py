@@ -268,23 +268,51 @@ class ExecuteCommandTool(BaseTool):
 
 class WebSearchTool(BaseTool):
     name = "web_search"
-    description = "Search the web for technical documentation, tutorials, or public information via DuckDuckGo."
+    description = "Search the web for technical documentation, live information, and news via DuckDuckGo."
     parameters = {
         "type": "object",
         "properties": {
             "query": {
                 "type": "string",
                 "description": "The search query keywords.",
-            }
+            },
+            "max_results": {
+                "type": "integer",
+                "description": "Maximum search results to return (default: 4).",
+            },
         },
         "required": ["query"],
     }
 
-    def execute(self, query: str = "", **kwargs: Any) -> str:
+    def execute(self, query: str = "", max_results: int = 4, **kwargs: Any) -> str:
         if not query or not query.strip():
             return "Error: query is required."
+        
+        clean_query = query.strip()
+        limit = min(max(1, max_results), 6)
+
+        # 1. Primary engine: ddgs Python client
         try:
-            encoded = urllib.parse.quote(query.strip())
+            try:
+                from ddgs import DDGS
+            except ImportError:
+                from duckduckgo_search import DDGS
+
+            results = list(DDGS().text(clean_query, max_results=limit))
+            if results:
+                formatted = []
+                for item in results:
+                    title = item.get("title", "No Title")
+                    href = item.get("href", "")
+                    body = item.get("body", "")
+                    formatted.append(f"**{title}**\nLink: {href}\nSnippet: {body}")
+                return "Web Search Results:\n\n" + "\n\n---\n\n".join(formatted)
+        except Exception:
+            pass
+
+        # 2. Fallback: DuckDuckGo HTML endpoint
+        try:
+            encoded = urllib.parse.quote(clean_query)
             url = f"https://html.duckduckgo.com/html/?q={encoded}"
             req = urllib.request.Request(
                 url,
@@ -293,28 +321,21 @@ class WebSearchTool(BaseTool):
             with urllib.request.urlopen(req, timeout=10) as resp:
                 raw_html = resp.read().decode("utf-8", errors="replace")
 
-            # Extract snippets using regex
             snippets = []
             matches = re.findall(r'<a class="result__snippet[^>]*>(.*?)</a>', raw_html, re.DOTALL)
-            for m in matches[:4]:
+            for m in matches[:limit]:
                 clean = re.sub(r"<[^>]+>", "", m)
                 clean = html.unescape(clean).strip()
                 if clean:
                     snippets.append(clean)
 
-            if not snippets:
-                # Fallback: extract title snippets
-                title_matches = re.findall(r'<a class="result__url[^>]*>(.*?)</a>', raw_html, re.DOTALL)
-                for t in title_matches[:3]:
-                    clean = re.sub(r"<[^>]+>", "", t).strip()
-                    if clean:
-                        snippets.append(clean)
-
             if snippets:
                 return "Web Search Results:\n" + "\n\n".join(f"- {s}" for s in snippets)
-            return f"No clear results found for query: '{query}'."
-        except Exception as e:
-            return f"Web search error: {str(e)}"
+        except Exception:
+            pass
+
+        return f"No clear web results found for query: '{clean_query}'."
+
 
 
 class FetchUrlTool(BaseTool):
