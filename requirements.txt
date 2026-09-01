@@ -1,4 +1,5 @@
 ollama
+openai
 colorama
 python-dotenv
 # Text-to-speech

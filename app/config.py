@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 try:
+    # pyrefly: ignore [missing-import]
     from dotenv import load_dotenv
     # Load .env if present (developer can create a .env file)
     load_dotenv()
@@ -23,6 +24,30 @@ PROMPTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Model selection via environment variable for safety and flexibility
 MODEL = os.getenv("MODEL", "qwen2.5:3b-instruct")
+
+# ---------------------------------------------------------------------------
+# Hybrid Backend Provider Registry
+# ---------------------------------------------------------------------------
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+
+PROVIDERS = {
+    "local": {
+        "name": "Local Ollama",
+        "base_url": os.getenv("LOCAL_BASE_URL", "http://localhost:11434/v1"),
+        "model": os.getenv("LOCAL_MODEL", MODEL),
+        "api_key": "ollama",  # Ollama ignores the key but openai client requires one
+        "timeout": int(os.getenv("LOCAL_TIMEOUT", "120")),
+    },
+    "cloud": {
+        "name": "Groq Cloud",
+        "base_url": os.getenv("CLOUD_BASE_URL", "https://api.groq.com/openai/v1"),
+        "model": os.getenv("CLOUD_MODEL", "qwen/qwen3.8-27b"),
+        "api_key": GROQ_API_KEY,
+        "timeout": int(os.getenv("CLOUD_TIMEOUT", "30")),
+    },
+}
+
+DEFAULT_PROVIDER = os.getenv("ROHA_PROVIDER", "local")
 
 # Paths
 DB_PATH = os.getenv("DB_PATH", str(DATA_DIR / "roha.db"))

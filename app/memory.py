@@ -2,7 +2,7 @@ import sqlite3
 import threading
 import atexit
 import logging
-from typing import List, Optional, Tuple, Any
+from typing import List, Optional, Tuple, Any, Dict
 from types import TracebackType
 from app.types import Message
 from app.vector_memory import VectorMemoryStore
@@ -189,7 +189,148 @@ class MemoryManager:
             except Exception:
                 pass
 
+    def get_detailed_messages(self, limit: int = 50, search: str = "") -> List[Dict[str, Any]]:
+        """Fetch detailed messages with IDs, roles, content, and timestamps for management."""
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            if search and search.strip():
+                pattern = f"%{search.strip()}%"
+                cursor.execute(
+                    "SELECT id, role, content, timestamp FROM messages WHERE content LIKE ? ORDER BY id DESC LIMIT ?",
+                    (pattern, limit),
+                )
+            else:
+                cursor.execute(
+                    "SELECT id, role, content, timestamp FROM messages ORDER BY id DESC LIMIT ?",
+                    (limit,),
+                )
+            rows = cursor.fetchall()
+            return [
+                {"id": r[0], "role": r[1], "content": r[2], "timestamp": r[3], "type": "episodic"}
+                for r in rows
+            ]
+        except Exception:
+            logging.exception("Failed to retrieve detailed messages")
+            return []
+
+    def update_message(self, message_id: int, content: str) -> bool:
+        """Update the content of an episodic message by ID."""
+        clean_content = (content or "").strip()
+        if not clean_content or not message_id:
+            return False
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE messages SET content = ? WHERE id = ?",
+                (clean_content, message_id),
+            )
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception:
+            logging.exception("Failed to update message id=%s", message_id)
+            try:
+                self._get_connection().rollback()
+            except Exception:
+                pass
+            return False
+
+    def delete_message(self, message_id: int) -> bool:
+        """Delete an episodic message by ID."""
+        if not message_id:
+            return False
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM messages WHERE id = ?", (message_id,))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception:
+            logging.exception("Failed to delete message id=%s", message_id)
+            try:
+                self._get_connection().rollback()
+            except Exception:
+                pass
+            return False
+
+    def search_playground(self, query: str, k: int = 5, min_similarity: float = 0.25) -> Dict[str, Any]:
+        """Perform a multi-dimensional search comparison (Vector vs Episodic Fuzzy vs Synthesized RAG Context)."""
+        clean_query = (query or "").strip()
+        if not clean_query:
+            return {
+                "query": "",
+                "semantic_matches": [],
+                "episodic_matches": [],
+                "rag_context_preview": [],
+                "stats": {"semantic_count": 0, "episodic_count": 0},
+            }
+
+        # 1. Semantic Vector Matches
+        semantic_matches = []
+        try:
+            raw_semantic = self.vector_store.search(clean_query, k=k, min_similarity=min_similarity)
+            semantic_matches = [
+                {"text": text, "score": round(score, 3), "match_type": "Cosine Embedding Similarity"}
+                for text, score in raw_semantic
+            ]
+        except Exception:
+            logging.exception("Playground semantic search failed")
+
+        # 2. Episodic Fuzzy Matches
+        episodic_matches = []
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT id, role, content, timestamp FROM messages WHERE role IN ('user', 'assistant') ORDER BY id DESC LIMIT 100"
+            )
+            rows = cursor.fetchall()
+            if rows:
+                try:
+                    from rapidfuzz import fuzz
+                    for r_id, role, content, ts in rows:
+                        ratio = fuzz.token_set_ratio(clean_query, content)
+                        if ratio >= 25:
+                            episodic_matches.append({
+                                "id": r_id,
+                                "role": role,
+                                "content": content,
+                                "score": round(ratio / 100.0, 3),
+                                "timestamp": ts,
+                                "match_type": "Token Set Ratio (Fuzzy)",
+                            })
+                    episodic_matches.sort(key=lambda x: x["score"], reverse=True)
+                    episodic_matches = episodic_matches[:k]
+                except Exception:
+                    episodic_matches = [
+                        {"id": r[0], "role": r[1], "content": r[2], "score": 1.0, "timestamp": r[3], "match_type": "Recency"}
+                        for r in rows[:k]
+                    ]
+        except Exception:
+            logging.exception("Playground episodic search failed")
+
+        # 3. Synthesized RAG Context Preview
+        rag_preview = self.get_relevant_memories(clean_query, k=k)
+
+        return {
+            "query": clean_query,
+            "semantic_matches": semantic_matches,
+            "episodic_matches": episodic_matches,
+            "rag_context_preview": rag_preview,
+            "stats": {
+                "semantic_count": len(semantic_matches),
+                "episodic_count": len(episodic_matches),
+                "top_score": semantic_matches[0]["score"] if semantic_matches else (episodic_matches[0]["score"] if episodic_matches else 0.0),
+            }
+        }
+
     def close(self) -> None:
+        try:
+            if hasattr(self, "vector_store") and self.vector_store:
+                self.vector_store.close()
+        except Exception:
+            logging.exception("Error closing vector store")
         try:
             if hasattr(self._local, "conn") and self._local.conn:
                 self._local.conn.close()

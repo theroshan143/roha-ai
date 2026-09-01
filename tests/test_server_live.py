@@ -50,6 +50,37 @@ def test_live_server():
         assert data.get("ok") is True and data.get("is_verified") is True
         print("API /api/auth verification: PASSED")
 
+    # Test /api/memories GET
+    with urllib.request.urlopen(f"http://127.0.0.1:{test_port}/api/memories") as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+        assert "memories" in data
+        print("API /api/memories GET verification: PASSED")
+
+    # Test /api/memories/graph GET
+    with urllib.request.urlopen(f"http://127.0.0.1:{test_port}/api/memories/graph") as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+        assert "nodes" in data and "links" in data
+        print("API /api/memories/graph GET verification: PASSED")
+
+    # Test /api/memories/playground POST
+    req_pg = urllib.request.Request(f"http://127.0.0.1:{test_port}/api/memories/playground", data=json.dumps({"query": "test query"}).encode(), headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req_pg) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+        assert "semantic_matches" in data and "episodic_matches" in data
+        print("API /api/memories/playground POST verification: PASSED")
+
+    # Test /api/workspace/tree GET
+    with urllib.request.urlopen(f"http://127.0.0.1:{test_port}/api/workspace/tree") as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+        assert data.get("ok") is True and "tree" in data
+        print("API /api/workspace/tree GET verification: PASSED")
+
+    # Test /api/workspace/file GET
+    with urllib.request.urlopen(f"http://127.0.0.1:{test_port}/api/workspace/file?path=run.py") as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+        assert data.get("ok") is True and "content" in data
+        print("API /api/workspace/file GET verification: PASSED")
+
     server.shutdown()
     server.server_close()
     session.close()

@@ -143,6 +143,8 @@ class TTSManager:
         self.voice_gender = voice_gender
         self.voice_id = voice_id
         self.voice_style = voice_style
+        self.rate = get_voice_rate()
+        self.volume = 1.0
         self._queue = queue.Queue()
         self._worker = None
         self._ready = threading.Event()
@@ -153,15 +155,27 @@ class TTSManager:
         if not self._ready.wait(timeout=5):
             logging.warning("TTS engine did not initialize within timeout; TTS may be unavailable")
 
+    def update_settings(self, rate: Optional[int] = None, volume: Optional[float] = None, voice_id: Optional[str] = None):
+        """Update voice settings dynamically."""
+        logging.info("TTS update_settings called with rate=%s, volume=%s, voice_id=%s", rate, volume, voice_id)
+        if rate is not None:
+            self.rate = rate
+        if volume is not None:
+            self.volume = volume
+        if voice_id is not None:
+            self.voice_id = voice_id
+
     def set_voice(self, gender: str, voice_id: Optional[str] = None):
         if not self.engine:
             return
+        logging.info("TTS set_voice called with gender=%s, voice_id=%s", gender, voice_id)
         try:
             voices = self.engine.getProperty("voices")
             preferred = None
 
             if voice_id:
                 for v in voices:
+                    logging.debug("TTS set_voice - checking v.id: %s", getattr(v, "id", None))
                     if getattr(v, "id", None) == voice_id:
                         preferred = v
                         break
@@ -177,10 +191,11 @@ class TTSManager:
                 preferred = voices[0]
 
             if preferred:
+                logging.info("TTS set_voice - selecting voice: name=%s, id=%s", preferred.name, preferred.id)
                 try:
                     self.engine.setProperty("voice", preferred.id)
                 except Exception:
-                    logging.debug("Could not set voice id; using default")
+                    logging.warning("Could not set voice id %s; using default", preferred.id)
         except Exception:
             logging.debug("Could not enumerate voices; using default")
 
@@ -196,6 +211,17 @@ class TTSManager:
     def _apply_voice_config(self, gender: str, voice_id: Optional[str], voice_style: str):
         self.set_voice(gender, voice_id)
         self.set_style(voice_style)
+        if self.rate is not None:
+            try:
+                self.engine.setProperty("rate", self.rate)
+            except Exception:
+                pass
+        if self.volume is not None:
+            try:
+                # volume is expected to be 0.0 to 1.0 or scale appropriately
+                self.engine.setProperty("volume", self.volume)
+            except Exception:
+                pass
 
     def _speak_with_fresh_engine(self, text: str, voice_gender: str, voice_id: Optional[str], voice_style: str):
         pyttsx3 = _load_pyttsx3()
@@ -260,7 +286,8 @@ class TTSManager:
                     logging.info("TTS worker received shutdown signal")
                     break
                 try:
-                    self._speak_with_fresh_engine(text, voice_gender, voice_id, voice_style)
+                    # Read dynamic parameters from instance variables instead of static args
+                    self._speak_with_fresh_engine(text, self.voice_gender, self.voice_id, self.voice_style)
                 except Exception as e:
                     logging.warning("TTS speak failed during worker: %s", e)
             except Exception as e:
@@ -282,17 +309,18 @@ class TTSManager:
             "queue_size": self._queue.qsize() if hasattr(self, "_queue") else 0,
         }
 
-    def speak(self, text: str) -> None:
+    def speak(self, text: str, wait: bool = False) -> None:
         if not self.enabled:
             logging.info("TTS not enabled or engine missing; skip speak")
             return
         try:
-            # enqueue text and wait until the worker has actually spoken it
-            done_event = threading.Event()
+            # enqueue text non-blockingly unless wait=True is explicitly requested
+            done_event = threading.Event() if wait else None
             self._queue.put((text, done_event))
-            logging.info("TTS enqueued %d chars (queue size=%d)", len(text), self._queue.qsize())
-            if not done_event.wait(timeout=60):
-                logging.warning("TTS speak timed out waiting for worker to finish")
+            logging.info("TTS enqueued %d chars (queue size=%d, wait=%s)", len(text), self._queue.qsize(), wait)
+            if wait and done_event:
+                if not done_event.wait(timeout=60):
+                    logging.warning("TTS speak timed out waiting for worker to finish")
         except Exception as e:
             logging.warning("Failed to enqueue TTS text: %s", e)
 

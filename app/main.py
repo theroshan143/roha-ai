@@ -1,6 +1,14 @@
 import argparse
 import logging
 import os
+import sys
+
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 from app.assistant_session import RohaSession
 from app.keyboard_listener import watch_for_stop
@@ -168,6 +176,21 @@ def main():
                     print(f"System: Active Security Status: {status}")
                     continue
 
+                if user_input.lower() == "/online":
+                    reply = session.process_user_input("/online")
+                    print(f"System: {reply}")
+                    continue
+
+                if user_input.lower() == "/offline":
+                    reply = session.process_user_input("/offline")
+                    print(f"System: {reply}")
+                    continue
+
+                if user_input.lower() == "/backend":
+                    reply = session.process_user_input("/backend")
+                    print(f"System: {reply}")
+                    continue
+
                 elif user_input.lower().startswith("/mode"):
                     parts = user_input.split()
                     if len(parts) > 1 and parts[1] in ("text", "voice", "wake", "web"):
@@ -189,6 +212,9 @@ def main():
                     print(" /auth <pin>    : Authenticate as Creator (Roshan Kumar)")
                     print(" /lock          : Lock session into Guest Mode")
                     print(" /status        : View current authentication & security status")
+                    print(" /online        : Switch to Cloud mode (Groq)")
+                    print(" /offline       : Switch to Local mode (Ollama)")
+                    print(" /backend       : View active backend provider and model")
                     print(" /listen        : Record voice input using microphone")
                     print(" /mode <mode>   : Switch mode (text, voice, wake, web)")
                     print(" exit           : Exit Roha")
